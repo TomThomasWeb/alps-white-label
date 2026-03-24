@@ -457,6 +457,7 @@ function TopNav({ title }) {
   const tools = [
     { path: "/product-sheet-generator", label: "Product Sheets" },
     { path: "/claims-guidance-card", label: "Claims Cards" },
+    { path: "/email-templates", label: "Email Templates" },
   ];
   return (
     <div className="alps-topnav" style={{
@@ -626,6 +627,7 @@ function HomePage() {
   const tools = [
     { path: "/product-sheet-generator", title: "Product Sheet Generator", desc: "Create branded product PDFs for your clients", icon: "📄", color: "#E91E8B" },
     { path: "/claims-guidance-card", title: "Claims Guidance Card", desc: "Generate branded claims cards for your clients at point of sale", icon: "📋", color: "#0891B2" },
+    { path: "/email-templates", title: "Email Templates", desc: "Branded, ready-to-send emails for every stage of the client journey", icon: "✉️", color: "#7c3aed" },
   ];
 
   return (
@@ -1149,6 +1151,367 @@ function ClaimsGuidanceCard() {
 }
 
 // ═══════════════════════════════════════════════
+// EMAIL TEMPLATES TOOL
+// ═══════════════════════════════════════════════
+const EMAIL_STAGES = [
+  { id: "intro", icon: "📬", title: "Introduction & Awareness", desc: "First contact and product awareness" },
+  { id: "quote", icon: "💬", title: "At Point of Quote", desc: "Follow-up after quoting" },
+  { id: "sale", icon: "✅", title: "At Point of Sale", desc: "Welcome and confirmation emails" },
+  { id: "midterm", icon: "🔄", title: "Mid-Term", desc: "Check-ins during the policy" },
+  { id: "renewal", icon: "🔔", title: "Renewal", desc: "Renewal notices and confirmations" },
+  { id: "crosssell", icon: "🔀", title: "Cross-Sell", desc: "Introduce complementary products" },
+];
+
+const PRODUCT_CLAIMS = {
+  "motor-legal": { phone: "01260 241000", instruction: "In the event of an accident, check everyone is safe (call 999 if needed), move to a safe place, photograph the scene, and record third party details. Claims can be tracked via the Valid8 portal at valid8.alpsltd.co.uk" },
+  "alps-complete": { phone: "01260 241000", instruction: "In the event of an accident, check everyone is safe (call 999 if needed), move to a safe place, photograph the scene, and record third party details. Claims can be tracked via the Valid8 portal at valid8.alpsltd.co.uk" },
+  "road-rescue": { phone: "+44 1260 547059", instruction: "Call the number above and quote your vehicle registration — that's all you need." },
+  "landlord-legal": { phone: "01260 241000", instruction: "Call the number above and follow the prompts for Landlord Legal. Have your policy number or postcode ready." },
+};
+
+function getClaimsInfo(productId) {
+  if (PRODUCT_CLAIMS[productId]) return PRODUCT_CLAIMS[productId];
+  return { phone: "[CLAIMS PHONE NUMBER]", instruction: "[CLAIMS INSTRUCTIONS]" };
+}
+
+function buildEmailTemplates(productId) {
+  const product = PRODUCTS.find(p => p.id === productId);
+  const pName = product ? product.title : "[PRODUCT NAME]";
+  const pDesc = product ? product.description : "[PRODUCT DESCRIPTION]";
+  const claims = getClaimsInfo(productId);
+  const category = product ? product.category : "";
+  const contextWord = category === "Motor" ? "vehicle" : category === "Let Property" ? "property" : category === "Commercial" ? "business" : "home";
+
+  return {
+    intro: [
+      {
+        id: "1a", title: "General Product Introduction", desc: "Introduce a product the client may not know about",
+        subject: `Something worth knowing about — ${pName}`,
+        body: `I wanted to get in touch to let you know about something I can arrange on your behalf that you may find valuable.\n\n${pName} is designed to give you additional peace of mind by providing ${product ? product.tagline.toLowerCase() : "[KEY BENEFIT]"}.\n\nIn plain terms, ${product ? pDesc.split(".")[0].toLowerCase() + "." : "[BRIEF EXPLANATION OF WHAT THE PRODUCT COVERS]."}\n\nThis is something I'd recommend considering — there's no obligation, but I wanted to make sure you were aware it's available.\n\nIf you'd like to find out more or get a quote, just reply to this email or give me a call. I'm always happy to talk things through.`,
+      },
+      {
+        id: "1b", title: "Soft Awareness Nudge", desc: "Raise awareness of a gap in protection",
+        subject: `Is your ${contextWord} fully protected?`,
+        body: `I hope you're well. I just wanted to drop you a quick line about something that comes up quite often with clients.\n\nMany people don't realise that their main insurance policy may not cover everything — and that's where ${pName} comes in. It's designed to ${product ? product.tagline.toLowerCase() : "[EXPLAIN CORE BENEFIT IN ONE SENTENCE]"}.\n\nIt's the kind of cover you hope you'll never need, but you'll be very glad to have if the situation arises.\n\nIf you'd like to have a quick conversation about whether it's right for you, I'm here whenever suits. No pressure at all — just looking out for you.`,
+      },
+    ],
+    quote: [
+      {
+        id: "2a", title: "Post-Quote Follow-Up", desc: "Follow up after providing a quote",
+        subject: `Following up on your quote — ${pName}`,
+        body: `Thank you for your time [earlier today/yesterday] — it was good to speak with you.\n\nAs discussed, I wanted to follow up regarding ${pName}. Just as a reminder, this provides ${product ? product.tagline.toLowerCase() : "[BRIEF DESCRIPTION OF COVER]"}.\n\n${product ? pDesc.split(".").slice(0, 2).join(".") + "." : "[ONE OR TWO SENTENCES EXPLAINING THE COVER IN PLAIN ENGLISH]."}\n\nIf you'd like to go ahead, just let me know and I can get everything set up for you. And of course, if you have any questions at all, I'm here to help.\n\nThere's no rush — take your time and come back to me whenever you're ready.`,
+      },
+      {
+        id: "2b", title: "Cross-Sell Alongside Quote", desc: "Suggest additional cover alongside a main policy",
+        subject: "A few options worth considering alongside your policy",
+        body: `While we're getting your main policy arranged, I wanted to flag something that works really well alongside it.\n\n${pName} is designed to ${product ? product.tagline.toLowerCase() : "[KEY BENEFIT]"} — and it's particularly useful because ${product ? pDesc.split(".")[0].toLowerCase() + "." : "[BRIEF EXPLANATION]."}\n\nIt's a relatively small addition that can make a big difference when you need it most.\n\nWould you like me to talk you through the details before we finalise everything? Happy to have a quick chat at a time that suits.`,
+      },
+    ],
+    sale: [
+      {
+        id: "3a", title: "Welcome & Policy Confirmation", desc: "Confirm cover is in place",
+        subject: `You're covered — your ${pName} policy is confirmed`,
+        body: `Great news — your ${pName} policy is now in place. You're covered.\n\nAs a reminder, this policy provides ${product ? product.tagline.toLowerCase() : "[KEY BENEFIT]"}.\n\nA few important things to keep in mind:\n\n• Your policy includes a 14-day cooling-off period from the start date. If you change your mind during this time, you can cancel and receive a full refund.\n\n• If you need to make a claim, here's what to do:\n  Phone: ${claims.phone}\n  ${claims.instruction}\n\nPlease keep these details somewhere safe — you may need them at short notice.\n\nIf you have any questions at any point during your policy, don't hesitate to get in touch. I'm here throughout.`,
+      },
+      {
+        id: "3b", title: "Policy Documents Delivery", desc: "Accompany policy documents",
+        subject: `Your ${pName} documents are enclosed`,
+        body: `Please find enclosed your policy documents for ${pName}.\n\nThe most important thing to keep handy is your claims contact number: ${claims.phone}. In the event you need to make a claim, this is the first number to call.\n\nI'd encourage you to have a read through the key facts document at your convenience — it sets out exactly what's covered and any conditions to be aware of.\n\nIf anything is unclear or you have questions, just give me a call or drop me an email. I'm always happy to help.`,
+      },
+    ],
+    midterm: [
+      {
+        id: "4a", title: "Mid-Term Check-In", desc: "Friendly check-in during the policy",
+        subject: "Just checking in — [CLIENT FIRST NAME]",
+        fields: ["clientFirstName"],
+        body: `I hope all is well. I just wanted to check in and make sure you're happy with your ${pName} cover.\n\nAs a quick reminder, your policy provides ${product ? product.tagline.toLowerCase() : "[KEY BENEFIT]"} — so you've got peace of mind there.\n\nHave there been any changes to your circumstances since we last spoke? For example, any changes to your ${contextWord} or personal situation that might be worth reviewing?\n\nIf so, it's always worth having a quick conversation so we can make sure your cover still fits. And if everything's fine, that's great — just wanted to check.\n\nFeel free to get in touch any time.`,
+      },
+      {
+        id: "4b", title: "Circumstances Change Prompt", desc: "Prompt clients to report changes",
+        subject: "Has anything changed since you took out your policy?",
+        body: `I'm reaching out because it's always a good idea to check in from time to time.\n\nIf anything has changed recently — a new ${contextWord}, a change of address, or any other update — it's important to let me know sooner rather than later. Changes like these can sometimes affect your cover under ${pName}, and I'd hate for you to find that out at the point of a claim.\n\nIt only takes a couple of minutes to update, and I can make sure everything is still working as it should.\n\nJust drop me a reply or give me a call — I'm always happy to help.`,
+      },
+    ],
+    renewal: [
+      {
+        id: "5a", title: "30-Day Renewal Notice", desc: "Notify client of upcoming renewal",
+        subject: `Your ${pName} is due to renew next month`,
+        fields: ["renewalDate", "renewalPremium"],
+        body: `I'm writing to let you know that your ${pName} policy is due for renewal on [RENEWAL DATE].\n\n${product ? "As a reminder, this policy provides " + product.tagline.toLowerCase() + "." : "[BRIEF DESCRIPTION OF COVER]."}\n\n[If premium is known: Your renewal premium is £[RENEWAL PREMIUM].]\n\nI'll be in touch again closer to the date, but in the meantime, if you have any questions or would like to discuss your options, please don't hesitate to get in touch.\n\nI'm here to make sure you've got the right cover at the right price.`,
+      },
+      {
+        id: "5b", title: "7-Day Renewal Reminder", desc: "Reminder before renewal lapses",
+        subject: `Your ${pName} renews in 7 days — here's what you need to know`,
+        fields: ["renewalDate"],
+        body: `A quick reminder that your ${pName} policy is due to renew on [RENEWAL DATE].\n\nIf your policy lapses, you would be without ${product ? product.tagline.toLowerCase() : "[KEY BENEFIT]"} — and that could leave you exposed at exactly the wrong moment.\n\nIf you're happy to continue, there's nothing you need to do — I'll take care of the rest. But if you'd like to discuss your renewal or explore alternatives, please get in touch before [RENEWAL DATE].\n\nI'm here to help.`,
+      },
+      {
+        id: "5c", title: "Post-Renewal Confirmation", desc: "Confirm successful renewal",
+        subject: `Your ${pName} has renewed — you're still covered`,
+        body: `Good news — your ${pName} policy has renewed successfully, and you're still fully covered.\n\nAs a reminder, this policy provides ${product ? product.tagline.toLowerCase() : "[KEY BENEFIT]"}.\n\nYour claims contact number remains: ${claims.phone}\n\nThank you for your continued trust — I appreciate you choosing to arrange your cover through me. As always, if you need anything at all, don't hesitate to get in touch.`,
+      },
+    ],
+    crosssell: [
+      {
+        id: "6a", title: "Bundle Suggestion", desc: "Introduce a complementary product",
+        subject: "Something that pairs well with your existing cover",
+        fields: ["existingProduct"],
+        body: `Since you already have [EXISTING PRODUCT] in place, I wanted to let you know about ${pName} — it's a natural complement that a lot of my clients find valuable.\n\nWhile your existing cover takes care of [EXISTING PRODUCT AREA], ${pName} picks up where it leaves off by providing ${product ? product.tagline.toLowerCase() : "[KEY BENEFIT]"}.\n\nTogether, the two give you much more comprehensive protection — and it's surprisingly affordable.\n\nWould you like me to run through the details? No obligation at all — just a quick conversation to see if it makes sense for you.`,
+      },
+      {
+        id: "6b", title: "Gap in Cover Nudge", desc: "Raise an area of risk the client may have missed",
+        subject: "One area of cover we haven't yet discussed…",
+        body: `I wanted to get in touch about something we haven't covered yet — and it's an area that's worth thinking about.\n\n${pName} is designed to ${product ? product.tagline.toLowerCase() : "[KEY BENEFIT]"}. It's the kind of protection that many people don't think about until it's too late.\n\n${product ? pDesc.split(".")[0] + "." : "[BRIEF EXPLANATION OF WHAT THIS PRODUCT COVERS]."}\n\nI'm not trying to sell you something you don't need — but I'd feel remiss if I didn't at least make you aware. If you'd like to have a quick chat about it, I'm here whenever suits.`,
+      },
+    ],
+  };
+}
+
+function EmailTemplates() {
+  const { profile } = useBrokerProfile();
+  const { show, ToastUI } = useToast();
+  const [stage, setStage] = useState(null);
+  const [templateId, setTemplateId] = useState(null);
+  const [selectedProduct, setSelectedProduct] = useState("");
+  const [fields, setFields] = useState({ clientName: "", clientFirstName: "", renewalDate: "", renewalPremium: "", existingProduct: "" });
+
+  const templates = selectedProduct ? buildEmailTemplates(selectedProduct) : buildEmailTemplates("");
+  const stageTemplates = stage ? (templates[stage] || []) : [];
+  const currentTemplate = stageTemplates.find(t => t.id === templateId);
+
+  const firmName = profile?.brokerName || "[FIRM NAME]";
+  const fcaNum = profile?.fcaNumber || "[FCA NUMBER]";
+  const senderPhone = profile?.phone || "[PHONE]";
+  const senderEmail = profile?.email || "[EMAIL]";
+  const footerMessage = profile?.footerMessage || "";
+
+  const complianceFooter = `${firmName} is authorised and regulated by the Financial Conduct Authority. FCA Registration Number: ${fcaNum}. This email and any attachments are confidential and intended solely for the addressee.\n\n${senderPhone} | ${senderEmail}${footerMessage ? "\n" + footerMessage : ""}`;
+
+  const fillPlaceholders = (text) => {
+    let t = text;
+    if (fields.clientFirstName) t = t.replace(/\[CLIENT FIRST NAME\]/g, fields.clientFirstName);
+    if (fields.renewalDate) t = t.replace(/\[RENEWAL DATE\]/g, fields.renewalDate);
+    if (fields.renewalPremium) t = t.replace(/\[RENEWAL PREMIUM\]/g, fields.renewalPremium);
+    if (fields.existingProduct) {
+      t = t.replace(/\[EXISTING PRODUCT\]/g, fields.existingProduct);
+      t = t.replace(/\[EXISTING PRODUCT AREA\]/g, fields.existingProduct);
+    }
+    return t;
+  };
+
+  const highlightPlaceholders = (text) => {
+    return text.replace(/\[([A-Z\s\/]+)\]/g, '<span style="background:#fef3c7;color:#92400e;padding:1px 4px;border-radius:3px;font-weight:600;">[$1]</span>');
+  };
+
+  const getFullEmail = (plain = false) => {
+    if (!currentTemplate) return "";
+    const greeting = fields.clientName ? `Dear ${fields.clientName},` : "Dear [CLIENT NAME],";
+    const signoff = `Kind regards,\n${firmName}`;
+    const body = fillPlaceholders(currentTemplate.body);
+    const full = `${greeting}\n\n${body}\n\n${signoff}\n\n---\n${complianceFooter}`;
+    return full;
+  };
+
+  const handleDownloadTxt = () => {
+    if (!currentTemplate) return;
+    const subject = fillPlaceholders(currentTemplate.subject);
+    const content = `Subject: ${subject}\n\n${getFullEmail()}`;
+    const blob = new Blob([content], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${currentTemplate.title.replace(/\s+/g, "-").toLowerCase()}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+    show("Plain text file downloaded! 📄");
+  };
+
+  const handleDownloadPdf = () => {
+    if (!currentTemplate) return;
+    const pw = window.open("", "_blank");
+    if (!pw) { show("Pop-up blocked — please allow pop-ups.", "error"); return; }
+    const subject = fillPlaceholders(currentTemplate.subject);
+    const bodyHtml = fillPlaceholders(currentTemplate.body).replace(/\n/g, "<br>");
+    const greeting = fields.clientName ? `Dear ${fields.clientName},` : "Dear [CLIENT NAME],";
+    const brandColor = profile?.brandColor || "#1a3a5c";
+    const logoHtml = profile?.logoUrl ? `<img src="${profile.logoUrl}" style="max-height:40px;object-fit:contain;margin-bottom:16px;" />` : "";
+
+    pw.document.write(`<!DOCTYPE html><html><head><title>${subject}</title><style>
+      *{margin:0;padding:0;box-sizing:border-box;}
+      body{font-family:'Segoe UI',system-ui,sans-serif;padding:40px 50px;color:#1e293b;font-size:13px;line-height:1.7;}
+      @media print{@page{margin:20mm;size:A4;}}
+    </style></head><body>
+      ${logoHtml}
+      <div style="border-bottom:3px solid ${brandColor};padding-bottom:12px;margin-bottom:24px;">
+        <div style="font-size:11px;color:#64748b;font-weight:600;">${firmName}</div>
+        <div style="font-size:18px;font-weight:800;color:${brandColor};margin-top:4px;">Subject: ${subject}</div>
+      </div>
+      <p style="margin-bottom:16px;">${greeting}</p>
+      <div style="margin-bottom:24px;">${bodyHtml}</div>
+      <p style="margin-bottom:4px;">Kind regards,</p>
+      <p style="font-weight:700;margin-bottom:32px;">${firmName}</p>
+      <div style="border-top:1px solid #e2e8f0;padding-top:16px;font-size:10px;color:#94a3b8;line-height:1.6;">
+        <p>${firmName} is authorised and regulated by the Financial Conduct Authority. FCA Registration Number: ${fcaNum}.</p>
+        <p style="margin-top:4px;">This email and any attachments are confidential and intended solely for the addressee.</p>
+        <p style="margin-top:8px;">${senderPhone} | ${senderEmail}${footerMessage ? "<br>" + footerMessage : ""}</p>
+      </div>
+    </body></html>`);
+    pw.document.close();
+    setTimeout(() => pw.print(), 500);
+    show("PDF letter ready — check the new tab! 🎉");
+  };
+
+  const inputStyle = { width: "100%", padding: "10px 14px", border: "2px solid #e2e8f0", borderRadius: 8, fontSize: 13, fontFamily: "inherit", outline: "none", background: "#fff", boxSizing: "border-box" };
+  const labelStyle = { display: "block", fontSize: 11, fontWeight: 700, color: "#475569", marginBottom: 4, textTransform: "uppercase", letterSpacing: 0.5 };
+
+  return (
+    <div style={{ minHeight: "100vh", background: "#f1f5f9", fontFamily: FONT }}>
+      <TopNav title="Email Templates" />
+      <ToastUI />
+      <div style={{ maxWidth: 960, margin: "0 auto", padding: "36px 20px 60px" }}>
+        <div style={{ textAlign: "center", marginBottom: 32 }}>
+          <h2 style={{ margin: "0 0 6px", fontSize: 24, fontWeight: 800, color: "#1e293b" }}>Email Templates</h2>
+          <p style={{ margin: 0, fontSize: 14, color: "#64748b" }}>Branded, ready-to-send emails for every stage of the client journey.</p>
+        </div>
+
+        {!profile && (
+          <div style={{ background: "#fff", border: "2px solid #F5A623", borderRadius: 12, padding: "24px", textAlign: "center", marginBottom: 28 }}>
+            <div style={{ fontSize: 28, marginBottom: 8 }}>👤</div>
+            <h3 style={{ margin: "0 0 8px", fontSize: 16, fontWeight: 700, color: "#1e293b" }}>Set Up Your Broker Profile First</h3>
+            <p style={{ margin: "0 0 16px", fontSize: 13, color: "#64748b" }}>Your branding details are needed to generate email templates.</p>
+            <Link to="/broker-profile" style={{ display: "inline-block", padding: "10px 24px", borderRadius: 10, background: "linear-gradient(135deg, #E91E8B 0%, #F5A623 100%)", color: "#fff", fontSize: 14, fontWeight: 700, textDecoration: "none" }}>Complete Your Profile →</Link>
+          </div>
+        )}
+
+        {/* Breadcrumb navigation */}
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 24, fontSize: 13, color: "#94a3b8" }}>
+          <span onClick={() => { setStage(null); setTemplateId(null); }} style={{ cursor: "pointer", fontWeight: 600, color: stage ? "#7c3aed" : "#1e293b" }}>Journey Stage</span>
+          {stage && <><span>→</span><span onClick={() => setTemplateId(null)} style={{ cursor: "pointer", fontWeight: 600, color: templateId ? "#7c3aed" : "#1e293b" }}>{EMAIL_STAGES.find(s => s.id === stage)?.title}</span></>}
+          {templateId && currentTemplate && <><span>→</span><span style={{ fontWeight: 600, color: "#1e293b" }}>{currentTemplate.title}</span></>}
+        </div>
+
+        {/* Stage 1: Select Journey Stage */}
+        {!stage && (
+          <div className="alps-claims-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
+            {EMAIL_STAGES.map(s => (
+              <div key={s.id} onClick={() => setStage(s.id)} style={{
+                background: "#fff", borderRadius: 14, padding: "28px 24px", cursor: "pointer",
+                border: "2px solid #e2e8f0", textAlign: "center", transition: "all 0.15s",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.borderColor = "#7c3aed"; e.currentTarget.style.transform = "translateY(-2px)"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.borderColor = "#e2e8f0"; e.currentTarget.style.transform = "none"; }}
+              >
+                <div style={{ fontSize: 36, marginBottom: 10 }}>{s.icon}</div>
+                <h3 style={{ margin: "0 0 4px", fontSize: 15, fontWeight: 700, color: "#1e293b" }}>{s.title}</h3>
+                <p style={{ margin: 0, fontSize: 12, color: "#94a3b8" }}>{s.desc}</p>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Stage 2: Select Template */}
+        {stage && !templateId && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            {stageTemplates.map(t => (
+              <div key={t.id} onClick={() => setTemplateId(t.id)} style={{
+                background: "#fff", borderRadius: 12, padding: "20px 24px", cursor: "pointer",
+                border: "2px solid #e2e8f0", display: "flex", alignItems: "center", gap: 16,
+                transition: "all 0.15s",
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.borderColor = "#7c3aed"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.borderColor = "#e2e8f0"; }}
+              >
+                <div style={{ width: 44, height: 44, borderRadius: 10, background: "#7c3aed12", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, flexShrink: 0 }}>✉️</div>
+                <div>
+                  <h4 style={{ margin: "0 0 2px", fontSize: 15, fontWeight: 700, color: "#1e293b" }}>{t.title}</h4>
+                  <p style={{ margin: 0, fontSize: 13, color: "#64748b" }}>{t.desc}</p>
+                </div>
+                <span style={{ marginLeft: "auto", fontSize: 16, color: "#cbd5e1" }}>→</span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Stage 3: Customise & Export */}
+        {stage && templateId && currentTemplate && (
+          <div style={{ display: "grid", gridTemplateColumns: "340px 1fr", gap: 24 }} className="alps-profile-2col">
+            {/* Left: Controls */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              <div style={{ background: "#fff", borderRadius: 14, padding: "20px", border: "1px solid #e2e8f0" }}>
+                <h4 style={{ margin: "0 0 14px", fontSize: 14, fontWeight: 700, color: "#1e293b" }}>Product</h4>
+                <select value={selectedProduct} onChange={(e) => setSelectedProduct(e.target.value)} style={{ ...inputStyle, cursor: "pointer" }}>
+                  <option value="">Select a product...</option>
+                  {CATEGORIES.map(cat => (
+                    <optgroup key={cat.name} label={cat.name}>
+                      {PRODUCTS.filter(p => p.category === cat.name).map(p => (
+                        <option key={p.id} value={p.id}>{p.title}</option>
+                      ))}
+                    </optgroup>
+                  ))}
+                </select>
+              </div>
+
+              <div style={{ background: "#fff", borderRadius: 14, padding: "20px", border: "1px solid #e2e8f0" }}>
+                <h4 style={{ margin: "0 0 14px", fontSize: 14, fontWeight: 700, color: "#1e293b" }}>Personalise</h4>
+                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                  <div><label style={labelStyle}>Client Full Name</label><input style={inputStyle} placeholder="e.g. John Smith" value={fields.clientName} onChange={(e) => setFields(f => ({ ...f, clientName: e.target.value }))} /></div>
+                  {(currentTemplate.fields || []).includes("clientFirstName") && (
+                    <div><label style={labelStyle}>Client First Name</label><input style={inputStyle} placeholder="e.g. John" value={fields.clientFirstName} onChange={(e) => setFields(f => ({ ...f, clientFirstName: e.target.value }))} /></div>
+                  )}
+                  {(currentTemplate.fields || []).includes("renewalDate") && (
+                    <div><label style={labelStyle}>Renewal Date</label><input style={inputStyle} placeholder="e.g. 15th April 2026" value={fields.renewalDate} onChange={(e) => setFields(f => ({ ...f, renewalDate: e.target.value }))} /></div>
+                  )}
+                  {(currentTemplate.fields || []).includes("renewalPremium") && (
+                    <div><label style={labelStyle}>Renewal Premium</label><input style={inputStyle} placeholder="e.g. 29.99" value={fields.renewalPremium} onChange={(e) => setFields(f => ({ ...f, renewalPremium: e.target.value }))} /></div>
+                  )}
+                  {(currentTemplate.fields || []).includes("existingProduct") && (
+                    <div><label style={labelStyle}>Existing Product</label><input style={inputStyle} placeholder="e.g. Motor Legal Protection" value={fields.existingProduct} onChange={(e) => setFields(f => ({ ...f, existingProduct: e.target.value }))} /></div>
+                  )}
+                </div>
+              </div>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <button onClick={handleDownloadTxt} style={{ padding: "12px 20px", borderRadius: 10, border: "none", background: "#7c3aed", color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", width: "100%" }}>📄 Download as Plain Text (.txt)</button>
+                <button onClick={handleDownloadPdf} style={{ padding: "12px 20px", borderRadius: 10, border: "2px solid #7c3aed", background: "#fff", color: "#7c3aed", fontSize: 13, fontWeight: 700, cursor: "pointer", width: "100%" }}>🖨️ Download as PDF Letter</button>
+              </div>
+            </div>
+
+            {/* Right: Live Preview */}
+            <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #e2e8f0", overflow: "hidden" }}>
+              {/* Subject bar */}
+              <div style={{ padding: "16px 24px", borderBottom: "1px solid #e2e8f0", background: "#f8fafc" }}>
+                <div style={{ fontSize: 10, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 4 }}>Subject</div>
+                <div style={{ fontSize: 15, fontWeight: 700, color: "#1e293b" }} dangerouslySetInnerHTML={{ __html: highlightPlaceholders(fillPlaceholders(currentTemplate.subject)) }} />
+              </div>
+              {/* From/To */}
+              <div style={{ padding: "12px 24px", borderBottom: "1px solid #f1f5f9", fontSize: 12, color: "#64748b" }}>
+                <div><strong>From:</strong> {firmName} ({senderEmail})</div>
+                <div><strong>To:</strong> {fields.clientName || "[CLIENT NAME]"}</div>
+              </div>
+              {/* Body */}
+              <div style={{ padding: "24px", fontSize: 13.5, lineHeight: 1.75, color: "#334155" }}>
+                <div dangerouslySetInnerHTML={{ __html: highlightPlaceholders(
+                  `${fields.clientName ? "Dear " + fields.clientName + "," : "Dear [CLIENT NAME],"}<br><br>` +
+                  fillPlaceholders(currentTemplate.body).replace(/\n/g, "<br>") +
+                  `<br><br>Kind regards,<br><strong>${firmName}</strong>`
+                ) }} />
+              </div>
+              {/* Compliance footer */}
+              <div style={{ padding: "16px 24px", borderTop: "1px solid #e2e8f0", background: "#f8fafc", fontSize: 10, color: "#94a3b8", lineHeight: 1.6 }}>
+                <p>{firmName} is authorised and regulated by the Financial Conduct Authority. FCA Registration Number: {fcaNum}.</p>
+                <p style={{ marginTop: 4 }}>This email and any attachments are confidential and intended solely for the addressee.</p>
+                <p style={{ marginTop: 6 }}>{senderPhone} | {senderEmail}{footerMessage ? ` | ${footerMessage}` : ""}</p>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════
 // APP ROOT
 // ═══════════════════════════════════════════════
 function App() {
@@ -1169,6 +1532,7 @@ function App() {
         <Route path="/broker-profile" element={<BrokerProfilePage />} />
         <Route path="/product-sheet-generator" element={<ProductSheetGenerator />} />
         <Route path="/claims-guidance-card" element={<ClaimsGuidanceCard />} />
+        <Route path="/email-templates" element={<EmailTemplates />} />
       </Routes>
     </>
   );
