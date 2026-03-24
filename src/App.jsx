@@ -448,15 +448,15 @@ function TopNav({ title }) {
         <Link to="/" style={{
           width: 34, height: 34, borderRadius: 8,
           background: "#f1f5f9", display: "flex", alignItems: "center", justifyContent: "center",
-          textDecoration: "none", fontSize: 16, color: "#475569",
+          textDecoration: "none", fontSize: 18,
           border: "1px solid #e2e8f0", transition: "background 0.15s",
         }}>
-          ⌂
+          🏠
         </Link>
         <span style={{ color: "#cbd5e1", fontSize: 14 }}>/</span>
         <span style={{ fontSize: 14, fontWeight: 700, color: "#1e293b" }}>{title}</span>
       </div>
-      <div style={{ display: "flex", gap: 6 }}>
+      <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
         {tools.map((t) => (
           <Link key={t.path} to={t.path} style={{
             padding: "6px 14px",
@@ -471,6 +471,18 @@ function TopNav({ title }) {
             transition: "all 0.15s",
           }}>{t.label}</Link>
         ))}
+        <Link to="/broker-profile" style={{
+          padding: "6px 16px",
+          borderRadius: 20,
+          fontSize: 12,
+          fontWeight: 700,
+          textDecoration: "none",
+          background: location.pathname === "/broker-profile" ? "#231d68" : "#231d68",
+          color: "#fff",
+          border: "none",
+          transition: "opacity 0.15s",
+          marginLeft: 4,
+        }}>⚙️ Branding Settings</Link>
       </div>
     </div>
   );
@@ -494,7 +506,7 @@ function HomePage() {
       path: "/claims-guidance-card",
       title: "Claims Guidance Card",
       desc: "Generate branded claims cards for your clients at point of sale",
-      icon: "🃏",
+      icon: "📋",
       color: "#0891B2",
     },
   ];
@@ -625,7 +637,7 @@ function BrokerProfilePage() {
   const { profile, saveProfile } = useBrokerProfile();
   const [form, setForm] = useState(profile || {
     brokerName: "", logoUrl: "", brandColor: "#1a3a5c", secondaryColor: "#E91E8B",
-    fcaNumber: "", phone: "", email: "", website: "",
+    fcaNumber: "", phone: "", email: "", website: "", footerMessage: "",
   });
   const [saved, setSaved] = useState(false);
   const fileRef = useRef(null);
@@ -749,6 +761,16 @@ function BrokerProfilePage() {
               <label style={labelStyle}>Website URL (optional)</label>
               <input style={inputStyle} placeholder="www.broker.co.uk" value={form.website}
                 onChange={(e) => setForm((f) => ({ ...f, website: e.target.value }))} />
+            </div>
+
+            <div>
+              <label style={labelStyle}>Footer Message (optional)</label>
+              <input style={inputStyle} placeholder="e.g. Protecting families since 1998"
+                value={form.footerMessage}
+                onChange={(e) => setForm((f) => ({ ...f, footerMessage: e.target.value }))} />
+              <p style={{ fontSize: 10, color: "#94a3b8", marginTop: 4 }}>
+                Shown at the bottom of your product sheets and claims cards.
+              </p>
             </div>
 
             <button onClick={handleSave} disabled={!form.brokerName} style={{
@@ -955,13 +977,12 @@ function ProductSheetGenerator() {
     email: profile?.email || "",
     fcaNumber: profile?.fcaNumber || "",
     brandColor: profile?.brandColor || "#1a3a5c",
-    footerMessage: "",
+    footerMessage: profile?.footerMessage || "",
     showPricing: false,
     prices: {},
   });
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [selectedProducts, setSelectedProducts] = useState(new Set(PRODUCTS.map((p) => p.id)));
-  const [showSettings, setShowSettings] = useState(false);
   const printRef = useRef(null);
 
   const filteredProducts = PRODUCTS.filter(
@@ -1039,128 +1060,52 @@ function ProductSheetGenerator() {
           </div>
         )}
 
-        {/* Settings Panel (collapsible) */}
+        {/* Pricing Toggle */}
         <div style={{
           background: "#fff", borderRadius: 14, border: "1px solid #e2e8f0",
-          marginBottom: 28, overflow: "hidden",
+          marginBottom: 28, padding: "20px 24px",
           boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
         }}>
-          <div onClick={() => setShowSettings(!showSettings)} style={{
-            padding: "16px 24px", cursor: "pointer",
-            display: "flex", justifyContent: "space-between", alignItems: "center",
-          }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              <span style={{ fontSize: 18 }}>⚙️</span>
-              <div>
-                <span style={{ fontSize: 14, fontWeight: 700, color: "#1e293b" }}>Branding Settings</span>
-                {config.brokerName && (
-                  <span style={{ fontSize: 12, color: "#94a3b8", marginLeft: 10 }}>
-                    {config.brokerName}{config.showPricing ? " · Pricing on" : ""}
-                  </span>
-                )}
-              </div>
+          <label style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer", userSelect: "none" }}
+            onClick={() => setConfig((c) => ({ ...c, showPricing: !c.showPricing }))}>
+            <div style={{
+              width: 20, height: 20, borderRadius: 5,
+              border: `2px solid ${config.showPricing ? config.brandColor : "#cbd5e1"}`,
+              background: config.showPricing ? config.brandColor : "#fff",
+              display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+              transition: "all 0.15s",
+            }}>
+              {config.showPricing && <span style={{ color: "#fff", fontSize: 12, fontWeight: 700, lineHeight: 1 }}>✓</span>}
             </div>
-            <span style={{ fontSize: 12, color: "#94a3b8", transition: "transform 0.2s", transform: showSettings ? "rotate(180deg)" : "none" }}>▼</span>
-          </div>
+            <div>
+              <span style={{ fontSize: 14, fontWeight: 700, color: "#1e293b" }}>Would you like to add pricing to these flyers?</span>
+              <span style={{ fontSize: 12, color: "#94a3b8", marginLeft: 8 }}>Only products with a price filled in will display it</span>
+            </div>
+          </label>
 
-          {showSettings && (
-            <div style={{ padding: "0 24px 24px", borderTop: "1px solid #f1f5f9" }}>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 14, marginTop: 16 }}>
-                <div>
-                  <label style={{ fontSize: 10, fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 4, display: "block" }}>Brokerage Name *</label>
-                  <input style={inputStyle} placeholder="e.g. Smith & Partners" value={config.brokerName}
-                    onChange={(e) => setConfig((c) => ({ ...c, brokerName: e.target.value }))} />
-                </div>
-                <div>
-                  <label style={{ fontSize: 10, fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 4, display: "block" }}>Phone</label>
-                  <input style={inputStyle} placeholder="01234 567890" value={config.phone}
-                    onChange={(e) => setConfig((c) => ({ ...c, phone: e.target.value }))} />
-                </div>
-                <div>
-                  <label style={{ fontSize: 10, fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 4, display: "block" }}>Email</label>
-                  <input style={inputStyle} placeholder="info@broker.co.uk" value={config.email}
-                    onChange={(e) => setConfig((c) => ({ ...c, email: e.target.value }))} />
-                </div>
-              </div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 14, marginTop: 14 }}>
-                <div>
-                  <label style={{ fontSize: 10, fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 4, display: "block" }}>FCA Number</label>
-                  <input style={inputStyle} placeholder="e.g. 123456" value={config.fcaNumber}
-                    onChange={(e) => setConfig((c) => ({ ...c, fcaNumber: e.target.value }))} />
-                </div>
-                <div>
-                  <label style={{ fontSize: 10, fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 4, display: "block" }}>Brand Colour</label>
-                  <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-                    <input type="color" value={config.brandColor}
-                      onChange={(e) => setConfig((c) => ({ ...c, brandColor: e.target.value }))}
-                      style={{ width: 40, height: 36, border: "2px solid #e2e8f0", borderRadius: 6, cursor: "pointer", padding: 2 }} />
-                    <input style={{ ...inputStyle, flex: 1 }} value={config.brandColor}
-                      onChange={(e) => setConfig((c) => ({ ...c, brandColor: e.target.value }))} />
+          {config.showPricing && (
+            <div style={{
+              marginTop: 16, padding: "14px 16px", background: "#f8fafc",
+              borderRadius: 10, border: "1px solid #e2e8f0",
+              display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6,
+              maxHeight: 280, overflowY: "auto",
+            }}>
+              {PRODUCTS.map((p) => (
+                <div key={p.id} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <span style={{
+                    fontSize: 7, color: "#fff", background: p.categoryColor,
+                    borderRadius: 3, padding: "1px 5px", fontWeight: 700,
+                    textTransform: "uppercase", flexShrink: 0, width: 60, textAlign: "center",
+                  }}>{p.category}</span>
+                  <span style={{ flex: 1, fontSize: 11, fontWeight: 600, color: "#334155", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{p.title}</span>
+                  <div style={{ position: "relative", flexShrink: 0, width: 80 }}>
+                    <span style={{ position: "absolute", left: 8, top: "50%", transform: "translateY(-50%)", color: "#94a3b8", fontSize: 11, fontWeight: 600 }}>£</span>
+                    <input style={{ ...inputStyle, padding: "6px 8px 6px 20px", fontSize: 11, width: 80, textAlign: "right" }}
+                      type="text" placeholder="—" value={config.prices[p.id] || ""}
+                      onChange={(e) => setConfig((c) => ({ ...c, prices: { ...c.prices, [p.id]: e.target.value } }))} />
                   </div>
                 </div>
-                <div>
-                  <label style={{ fontSize: 10, fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 4, display: "block" }}>Footer Message</label>
-                  <input style={inputStyle} placeholder="e.g. Protecting families since 1998" value={config.footerMessage}
-                    onChange={(e) => setConfig((c) => ({ ...c, footerMessage: e.target.value }))} />
-                </div>
-              </div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginTop: 14 }}>
-                <div>
-                  <label style={{ fontSize: 10, fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 4, display: "block" }}>Logo</label>
-                  <div style={{ position: "relative" }}>
-                    <input type="file" accept="image/*" style={{ fontSize: 12, color: "#64748b" }}
-                      onChange={(e) => {
-                        const file = e.target.files[0];
-                        if (file) {
-                          const reader = new FileReader();
-                          reader.onload = (ev) => setConfig((c) => ({ ...c, logoUrl: ev.target.result }));
-                          reader.readAsDataURL(file);
-                        }
-                      }} />
-                    {config.logoUrl && <img src={config.logoUrl} alt="" style={{ maxHeight: 28, objectFit: "contain", marginTop: 6, display: "block" }} />}
-                  </div>
-                </div>
-                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                  <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", userSelect: "none" }}
-                    onClick={() => setConfig((c) => ({ ...c, showPricing: !c.showPricing }))}>
-                    <div style={{
-                      width: 18, height: 18, borderRadius: 4,
-                      border: `2px solid ${config.showPricing ? config.brandColor : "#cbd5e1"}`,
-                      background: config.showPricing ? config.brandColor : "#fff",
-                      display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
-                    }}>
-                      {config.showPricing && <span style={{ color: "#fff", fontSize: 11, fontWeight: 700 }}>✓</span>}
-                    </div>
-                    <span style={{ fontSize: 12, fontWeight: 600, color: "#475569" }}>Add Pricing to Flyers</span>
-                  </label>
-                </div>
-              </div>
-
-              {config.showPricing && (
-                <div style={{
-                  marginTop: 14, padding: "14px 16px", background: "#f8fafc",
-                  borderRadius: 10, border: "1px solid #e2e8f0",
-                  display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6,
-                  maxHeight: 240, overflowY: "auto",
-                }}>
-                  {PRODUCTS.map((p) => (
-                    <div key={p.id} style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                      <span style={{
-                        fontSize: 7, color: "#fff", background: p.categoryColor,
-                        borderRadius: 3, padding: "1px 5px", fontWeight: 700,
-                        textTransform: "uppercase", flexShrink: 0, width: 60, textAlign: "center",
-                      }}>{p.category}</span>
-                      <span style={{ flex: 1, fontSize: 11, fontWeight: 600, color: "#334155", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{p.title}</span>
-                      <div style={{ position: "relative", flexShrink: 0, width: 80 }}>
-                        <span style={{ position: "absolute", left: 8, top: "50%", transform: "translateY(-50%)", color: "#94a3b8", fontSize: 11, fontWeight: 600 }}>£</span>
-                        <input style={{ ...inputStyle, padding: "6px 8px 6px 20px", fontSize: 11, width: 80, textAlign: "right" }}
-                          type="text" placeholder="—" value={config.prices[p.id] || ""}
-                          onChange={(e) => setConfig((c) => ({ ...c, prices: { ...c.prices, [p.id]: e.target.value } }))} />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+              ))}
             </div>
           )}
         </div>
@@ -1194,6 +1139,13 @@ function ProductSheetGenerator() {
 
         {/* Category Filter */}
         <CategoryFilter selectedCategory={selectedCategory} setSelectedCategory={setSelectedCategory} />
+
+        {/* Product selection label */}
+        <div style={{ textAlign: "center", marginBottom: 14 }}>
+          <p style={{ fontSize: 13, color: "#64748b", fontWeight: 600 }}>
+            Select which products you'd like to generate flyers for:
+          </p>
+        </div>
 
         {/* Product Toggles */}
         <div style={{
@@ -1288,7 +1240,7 @@ function ClaimsCardPreview({ product, profile, format }) {
               {profile.phone && <div>📞 {profile.phone}</div>}
               {profile.email && <div>✉️ {profile.email}</div>}
             </div>
-            <span style={{ fontSize: 6, color: "#cbd5e1" }}>Powered by Alps</span>
+            {profile.footerMessage && <span style={{ fontSize: 6, color: "#b0b8c4", fontStyle: "italic" }}>{profile.footerMessage}</span>}
           </div>
         </div>
       </div>
@@ -1373,7 +1325,7 @@ function ClaimsCardPreview({ product, profile, format }) {
           {profile.phone && <span style={{ marginRight: 12 }}>📞 {profile.phone}</span>}
           {profile.email && <span>✉️ {profile.email}</span>}
         </div>
-        <span style={{ fontSize: 9, color: "#cbd5e1", fontWeight: 600 }}>Powered by Alps</span>
+        {profile.footerMessage && <span style={{ fontSize: 9, color: "#94a3b8", fontStyle: "italic" }}>{profile.footerMessage}</span>}
       </div>
     </div>
   );
@@ -1441,7 +1393,7 @@ function ClaimsGuidanceCard() {
                 ${profile.phone ? `<div>📞 ${profile.phone}</div>` : ""}
                 ${profile.email ? `<div>✉️ ${profile.email}</div>` : ""}
               </div>
-              <span style="font-size:5px;color:#cbd5e1;">Powered by Alps</span>
+              <span style="font-size:5px;color:#cbd5e1;">${profile.footerMessage || ""}</span>
             </div>
           </div>
         </div>
@@ -1471,7 +1423,7 @@ function ClaimsGuidanceCard() {
               ${profile.phone ? `<span style="margin-right:12px;">📞 ${profile.phone}</span>` : ""}
               ${profile.email ? `<span>✉️ ${profile.email}</span>` : ""}
             </div>
-            <span style="font-size:8px;color:#cbd5e1;font-weight:600;">Powered by Alps</span>
+            <span style="font-size:8px;color:#94a3b8;font-style:italic;">${profile.footerMessage || ""}</span>
           </div>
         </div>
       `;
