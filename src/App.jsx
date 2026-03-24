@@ -1,1603 +1,1619 @@
-import { useState, useCallback, useRef, useEffect } from "react";
-import { supabase } from "./supabaseClient.js";
+import { useState, useRef, useCallback, useEffect, createContext, useContext } from "react";
+import { Routes, Route, Link, useLocation, useNavigate } from "react-router-dom";
 
-const ALPS_LOGO = "/alps-logo.webp";
+// ═══════════════════════════════════════════════
+// ALPS LOGO (embedded base64)
+// ═══════════════════════════════════════════════
+const ALPS_LOGO = "data:image/webp;base64,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cmRmOkRlc2NyaXB0aW9uIHJkZjphYm91dD0iIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtbG5zOnhtcE1NPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvbW0vIiB4bWxuczpzdFJlZj0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL3NUeXBlL1Jlc291cmNlUmVmIyIgeG1wOkNyZWF0b3JUb29sPSJBZG9iZSBQaG90b3Nob3AgMjIuNSAoTWFjaW50b3NoKSIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDo0REY5QThGOTBFODUxMUVEQTQ3QUJGMTM0NEJDNkMzMiIgeG1wTU06RG9jdW1lbnRJRD0ieG1wLmRpZDo0REY5QThGQTBFODUxMUVEQTQ3QUJGMTM0NEJDNkMzMiI+IDx4bXBNTTpEZXJpdmVkRnJvbSBzdFJlZjppbnN0YW5jZUlEPSJ4bXAuaWlkOjRERjlBOEY3MEU4NTExRURBNDdBQkYxMzQ0QkM2QzMyIiBzdFJlZjpkb2N1bWVudElEPSJ4bXAuZGlkOjRERjlBOEY4MEU4NTExRURBNDdBQkYxMzQ0QkM2QzMyIi8+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQgZW5kPSJyIj8+";
 
-const DASHBOARD_PASSWORD = "Sunnyside!";
+// ═══════════════════════════════════════════════
+// BROKER PROFILE CONTEXT
+// ═══════════════════════════════════════════════
+const BrokerContext = createContext();
 
-const PRIORITIES = {
-  critical: { label: "Critical", color: "#dc2626", bg: "rgba(220,38,38,0.08)", border: "rgba(220,38,38,0.25)", icon: "\u{1F534}" },
-  high: { label: "High", color: "#ea580c", bg: "rgba(234,88,12,0.08)", border: "rgba(234,88,12,0.25)", icon: "\u{1F7E0}" },
-  medium: { label: "Medium", color: "#ca8a04", bg: "rgba(202,138,4,0.08)", border: "rgba(202,138,4,0.25)", icon: "\u{1F7E1}" },
-  low: { label: "Low", color: "#16a34a", bg: "rgba(22,163,74,0.08)", border: "rgba(22,163,74,0.25)", icon: "\u{1F7E2}" },
-};
+function useBrokerProfile() {
+  return useContext(BrokerContext);
+}
 
-const STATUS = {
-  open: { label: "Open", color: "#6366f1", bg: "rgba(99,102,241,0.1)" },
-  in_progress: { label: "In Progress", color: "#0284c7", bg: "rgba(2,132,199,0.1)" },
-  completed: { label: "Completed", color: "#16a34a", bg: "rgba(22,163,74,0.1)" },
-};
+function BrokerProvider({ children }) {
+  const [profile, setProfile] = useState(() => {
+    try {
+      const saved = localStorage.getItem("alps_broker_profile");
+      return saved ? JSON.parse(saved) : null;
+    } catch { return null; }
+  });
 
-const TEMPLATES = [
-  { label: "Social Media Post", icon: "\u{1F4F1}", title: "Social media post", description: "Please create a social media post for the following:\n\n**Platform(s):** \n**Topic/message:** \n**Tone:** \n**Any specific images or links to include:** ", priority: "medium" },
-  { label: "Email Campaign", icon: "\u{1F4E7}", title: "Email campaign", description: "Please design an email campaign for:\n\n**Purpose/goal:** \n**Target audience:** \n**Key message:** \n**Call to action:** \n**Send date:** ", priority: "medium" },
-  { label: "Print Material", icon: "\u{1F5A8}", title: "Print material design", description: "Please create print material:\n\n**Type:** *(flyer/brochure/poster/banner)*\n**Size/dimensions:** \n**Content/copy:** \n**Brand or broker:** \n**Delivery date needed:** ", priority: "medium" },
-  { label: "PowerPoint Design", icon: "\u{1F4CA}", title: "PowerPoint presentation", description: "Please design a PowerPoint presentation:\n\n**Topic/purpose:** \n**Number of slides (approx):** \n**Key content/sections:**\n- Slide 1: \n- Slide 2: \n- Slide 3: \n\n**Audience:** \n**Brand or broker:** ", priority: "medium" },
-  { label: "Website Update", icon: "\u{1F310}", title: "Website update", description: "Please make the following website change:\n\n**Page/URL:** \n**What needs updating:** \n**New content/copy:** \n**Any new images needed:** ", priority: "medium" },
-  { label: "Video/Photo", icon: "\u{1F3AC}", title: "Video or photo request", description: "Please produce the following:\n\n**Type:** *(video/photo/both)*\n**Purpose:** \n**Location/setting:** \n**Duration or quantity:** \n**Deadline:** ", priority: "high" },
+  const saveProfile = (p) => {
+    setProfile(p);
+    try { localStorage.setItem("alps_broker_profile", JSON.stringify(p)); } catch {}
+  };
+
+  return (
+    <BrokerContext.Provider value={{ profile, saveProfile }}>
+      {children}
+    </BrokerContext.Provider>
+  );
+}
+
+// ═══════════════════════════════════════════════
+// PRODUCTS DATA (Product Sheet Generator)
+// ═══════════════════════════════════════════════
+const PRODUCTS = [
+  {
+    id: "motor-legal",
+    category: "Motor",
+    categoryColor: "#E91E8B",
+    title: "Motor Legal Protection",
+    tagline: "Peace of mind if you're involved in a road traffic accident that isn't your fault.",
+    icon: "⚖️",
+    image: "https://images.unsplash.com/photo-1589829545856-d10d557cf95f?w=800&q=80",
+    description: "Your car insurance should cover damage to your vehicle in a road traffic accident — but what about the other costs? Motor Legal Protection Insurance provides cover of up to £100,000 for legal and advisory fees, so you're never left out of pocket when it matters most.",
+    features: [
+      { icon: "💰", title: "Uninsured Loss Recovery", desc: "Recover costs like loss of earnings, your policy excess, and vehicle hire charges." },
+      { icon: "🩹", title: "Personal Injury Claims", desc: "Cover for both drivers and passengers to pursue compensation for injuries sustained." },
+      { icon: "🛡️", title: "Motoring Prosecution Defence", desc: "Legal protection to defend you against motoring prosecution charges." },
+      { icon: "📝", title: "Contractual Disputes", desc: "Support for disputes relating to the sale or purchase of a motor vehicle." },
+      { icon: "📱", title: "Online Claims Portal", desc: "Track your claim status, message your handler, and upload documents — all online." },
+      { icon: "👤", title: "Dedicated Claims Handler", desc: "Every claim is managed by a real person — you'll always speak to someone who knows your case." },
+    ],
+  },
+  {
+    id: "alps-complete",
+    category: "Motor",
+    categoryColor: "#E91E8B",
+    title: "Motor Legal Protection + Guaranteed Hire",
+    tagline: "Complete motoring peace of mind — legal cover plus a replacement vehicle when you need it most.",
+    icon: "🚗",
+    image: "https://images.unsplash.com/photo-1449965408869-ebd13bc9e5a8?w=800&q=80",
+    description: "Combining comprehensive Motor Legal Protection with a guaranteed replacement vehicle for up to 14 days following a fault accident, theft, fire, or total loss. You'll never be left without a vehicle when you need one most.",
+    features: [
+      { icon: "🚙", title: "Replacement Vehicle", desc: "A hire vehicle provided if your car is damaged and unroadworthy — regardless of fault status." },
+      { icon: "📅", title: "Up to 14 Days Cover", desc: "Access a replacement vehicle for up to 14 days, with options to extend at reduced rates." },
+      { icon: "🔄", title: "Two Claims Per Year", desc: "Cover for up to two claims during your policy period, up to a maximum aggregate of 14 days." },
+      { icon: "🚐", title: "Vehicle Choice", desc: "Choose from a small hatchback or short wheelbase van to suit your needs." },
+      { icon: "⭐", title: "Premium Options Available", desc: "Upgrade to Prestige, Family Saloon, or Large Van replacement vehicles." },
+      { icon: "⚖️", title: "Full Legal Protection", desc: "Includes all the benefits of our Motor Legal Protection cover up to £100,000." },
+    ],
+  },
+  {
+    id: "motor-excess",
+    category: "Motor",
+    categoryColor: "#E91E8B",
+    title: "Motor Excess Protection",
+    tagline: "Don't let your insurance excess catch you off guard.",
+    icon: "🔒",
+    image: "https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?w=800&q=80",
+    description: "Paying an excess on a motor claim can be a significant and unexpected expense. Motor Excess Protection lets you safeguard yourself against this cost, so a fault claim or delay in third-party payment doesn't leave you financially stretched.",
+    features: [
+      { icon: "📊", title: "Flexible Cover Limits", desc: "Choose the right level of protection for you, with cover limits from £150 up to £2,000." },
+      { icon: "📋", title: "Simple Claims Process", desc: "Complete a straightforward online form with proof of your excess payment — that's it." },
+      { icon: "🚛", title: "Fleet Cover Available", desc: "Motor fleet risks covered with indemnity limits up to £10,000 for up to 30 drivers." },
+      { icon: "📱", title: "Online Portal Access", desc: "View your claim status, communicate with your handler, and upload files — all in one place." },
+    ],
+  },
+  {
+    id: "auto-replace",
+    category: "Motor",
+    categoryColor: "#E91E8B",
+    title: "Auto Replace",
+    tagline: "A replacement vehicle when your car is off the road — up to 28 days.",
+    icon: "🔄",
+    image: "https://images.unsplash.com/photo-1502877338535-766e1452684a?w=800&q=80",
+    description: "If you're involved in a fault or disputed accident, theft, fire, or total loss, your main insurer may not provide a replacement vehicle. Auto Replace gives you up to 28 days' access to a suitable replacement, so you're never left stranded.",
+    features: [
+      { icon: "📅", title: "Flexible Duration", desc: "Select 7, 14, or 28 days' access to a hire vehicle depending on your situation." },
+      { icon: "🚙", title: "Vehicle Choice", desc: "Four vehicle types available: small hatchback, family saloon, small van, or large van." },
+      { icon: "🔄", title: "Multiple Claims", desc: "Up to 2 claims throughout the policy period, subject to the maximum aggregate days." },
+      { icon: "📦", title: "Courier & Delivery Cover", desc: "Vehicles used for courier and delivery purposes can also be covered." },
+    ],
+  },
+  {
+    id: "road-rescue",
+    category: "Motor",
+    categoryColor: "#E91E8B",
+    title: "Road Rescue",
+    tagline: "Breakdown cover you can rely on — with a bigger network than the AA, RAC, and Green Flag.",
+    icon: "🔧",
+    image: "https://images.unsplash.com/photo-1581244277943-fe4a9c777189?w=800&q=80",
+    description: "Our Road Rescue service is managed by Call Assist, operating the UK's largest recovery network with 3,500 technicians handling 350,000 claims every year. From local breakdowns to European travel, you're covered.",
+    features: [
+      { icon: "📍", title: "Range of Cover Levels", desc: "Local recovery, nationwide recovery, homestart, and European travel options available." },
+      { icon: "🚗", title: "Wide Vehicle Range", desc: "Cars, motorcycles, vans, couriers, driving schools, classic cars, and commercial vehicles." },
+      { icon: "⛽", title: "Misfuelling Cover", desc: "Wrong fuel? We'll drain, flush, and refill with 10 litres of the correct fuel, plus up to £1,500 engine damage cover." },
+      { icon: "🔑", title: "Lost & Stolen Keys", desc: "Up to £50 towards the cost of replacing lost or stolen keys." },
+      { icon: "🚛", title: "Fleet Road Rescue", desc: "Pro rata rates for fleets with mixed cover types — no requirement for all vehicles to be covered." },
+      { icon: "📏", title: "Generous Vehicle Dimensions", desc: "Vehicles up to 7.5T, 8.5m long, 2.5m wide, and 3.5m high can be covered." },
+    ],
+  },
+  {
+    id: "tools-transit",
+    category: "Motor",
+    categoryColor: "#E91E8B",
+    title: "Tools in Transit",
+    tagline: "Your tools are your livelihood — make sure they're protected.",
+    icon: "🔨",
+    image: "https://images.unsplash.com/photo-1504148455328-c376907d081c?w=800&q=80",
+    description: "If your tools are damaged or stolen, your ability to earn could be at stake. Tools in Transit protects your portable tools, tool kits, and test equipment while they're in or on your vehicle.",
+    features: [
+      { icon: "💥", title: "Damage Cover", desc: "Protection for tools damaged while being loaded onto, stored on, or unloaded from your vehicle." },
+      { icon: "🔐", title: "Theft Cover", desc: "Covered even when your vehicle is unattended, plus overnight cover in well-lit areas near your home." },
+      { icon: "📊", title: "Flexible Indemnity Limits", desc: "Choose cover from £500 up to £10,000 to match the value of your tools." },
+      { icon: "📞", title: "Simple Claims Process", desc: "A dedicated team guides you through every step with as little fuss as possible." },
+    ],
+  },
+  {
+    id: "gap",
+    category: "Motor",
+    categoryColor: "#E91E8B",
+    title: "GAP Insurance",
+    tagline: "Bridge the gap between your vehicle's market value and what you paid for it.",
+    icon: "📉",
+    image: "https://images.unsplash.com/photo-1580273916550-e323be2ae537?w=800&q=80",
+    description: "If your vehicle is written off, your motor insurer only pays its current market value — which can be thousands less than you originally paid. GAP Insurance covers the difference, protecting you from depreciation and outstanding finance.",
+    features: [
+      { icon: "⚡", title: "Fast Claims Payout", desc: "Expect payment within 24 hours of providing all required documentation." },
+      { icon: "💳", title: "Reduces Finance Risk", desc: "Covers any outstanding balance on HP, Personal Car Loans, and PCP agreements." },
+      { icon: "📈", title: "Eliminates Depreciation", desc: "Pays the difference between your insurance settlement and the original purchase price." },
+      { icon: "📅", title: "180-Day Purchase Window", desc: "Up to 180 days after buying your vehicle to take out a GAP policy." },
+      { icon: "🚗", title: "No Mileage Limits", desc: "Unlike many providers, there are no limitations on vehicle mileage." },
+      { icon: "💷", title: "Up to £50,000 Cover", desc: "Claim limit of £50,000 on vehicles valued up to £125,000." },
+    ],
+  },
+  {
+    id: "commercial-legal",
+    category: "Commercial",
+    categoryColor: "#00A69C",
+    title: "Commercial Legal Protection",
+    tagline: "Comprehensive legal cover for your business — without the cost of an in-house legal team.",
+    icon: "🏢",
+    image: "https://images.unsplash.com/photo-1556761175-4b46a572b786?w=800&q=80",
+    description: "Not every business can afford in-house legal expertise. Commercial Legal Protection provides comprehensive cover rated purely on business turnover, with no requirement to disclose wage roll. Choose from £50,000 or £100,000 indemnity limits.",
+    features: [
+      { icon: "📝", title: "Contract Disputes", desc: "Cover for disputes with customers or suppliers relating to the sale, hire, or supply of goods and services." },
+      { icon: "👥", title: "Employment Disputes", desc: "Support for disputes around contracts of employment, discrimination, and restrictive covenants." },
+      { icon: "🛡️", title: "Legal Defence", desc: "Defence against prosecution in a criminal court for an alleged act or omission." },
+      { icon: "📊", title: "Tax Investigation", desc: "Cover for professional fees relating to Tax, PAYE, VAT, or NIC disputes." },
+      { icon: "🏠", title: "Property Protection", desc: "Support in civil action for nuisance, trespass, or criminal damage to your business premises." },
+      { icon: "⚖️", title: "Jury Service Expenses", desc: "Reimbursement for lost salary or wages when attending court for jury service." },
+      { icon: "📞", title: "Helpline Support", desc: "Access a Legal Assistance helpline and tax advice line, operating 9am to 5pm." },
+      { icon: "💰", title: "Debt Recovery", desc: "Included as standard with the AmTrust option to help recover money owed to your business." },
+    ],
+  },
+  {
+    id: "commercial-excess",
+    category: "Commercial",
+    categoryColor: "#00A69C",
+    title: "Commercial Excess Protection",
+    tagline: "Take a higher excess for lower premiums — and still be fully covered.",
+    icon: "🏗️",
+    image: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=800&q=80",
+    description: "Opt for a higher commercial insurance excess to lower your premiums, while insuring that excess in the event of a claim. You get the same level of security and peace of mind, often at a lower overall cost.",
+    features: [
+      { icon: "📊", title: "Flexible Cover Limits", desc: "Indemnity limits ranging from £250 to £2,500 to match your policy excess." },
+      { icon: "✅", title: "Simple to Understand", desc: "Covers the excess paid for any successful claim under your commercial insurance policy." },
+      { icon: "🏦", title: "Strong Backing", desc: "Backed by a financially secure insurer with a proven claims track record." },
+      { icon: "🔄", title: "Business Continuity", desc: "Mitigate unexpected financial burdens to keep your business running smoothly." },
+    ],
+  },
+  {
+    id: "sole-trader",
+    category: "Commercial",
+    categoryColor: "#00A69C",
+    title: "Sole Trader Legal Protection",
+    tagline: "Focus on growing your business — we'll handle the legal worries.",
+    icon: "👤",
+    image: "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&q=80",
+    description: "Running a one-person business means wearing many hats. Sole Trader Legal Protection gives you wide-ranging cover of up to £75,000, so you can concentrate on what you do best without worrying about legal issues affecting your business or personal affairs.",
+    features: [
+      { icon: "🏠", title: "Personal Cover", desc: "Protection for Consumer Disputes, Home Rights, Personal Taxation, Criminal Prosecution Defence, and Identity Theft." },
+      { icon: "📝", title: "Contract Disputes", desc: "Cover for disputes with customers or suppliers about the sale, hire, or supply of goods and services." },
+      { icon: "📊", title: "Tax Investigation", desc: "Cover for professional fees relating to Tax, PAYE, VAT, or NIC disputes." },
+      { icon: "🏢", title: "Property Protection", desc: "Support for civil actions regarding nuisance, trespass, or criminal damage to your premises." },
+      { icon: "📜", title: "Licence Protection", desc: "Legal support if a regulatory licence is unfairly suspended, revoked, or altered." },
+      { icon: "💰", title: "Debt Recovery", desc: "Cover for recovering money owed to you from other businesses for goods or services provided." },
+      { icon: "🩹", title: "Personal Injury & More", desc: "Also includes pothole damage, illegal clamping & towing, unenforceable parking fines, and vehicle identity theft." },
+    ],
+  },
+  {
+    id: "landlord-legal",
+    category: "Let Property",
+    categoryColor: "#F5A623",
+    title: "Landlord Legal Expenses",
+    tagline: "When tenancies go wrong, make sure you're covered for every step.",
+    icon: "🏘️",
+    image: "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800&q=80",
+    description: "Tenancy disputes can be lengthy, stressful, and expensive. Landlord Legal Expenses provides comprehensive cover and expert advice for owners of both commercial and residential let properties, with cover per property — not per tenant.",
+    features: [
+      { icon: "📋", title: "Breach of Tenancy", desc: "Legal assistance when a tenant breaches their obligations under the tenancy agreement." },
+      { icon: "💷", title: "Rent Arrears Pursuit", desc: "Professional support to pursue outstanding rent payments from tenants." },
+      { icon: "🚪", title: "Eviction Support", desc: "Guidance and cover for evicting anyone occupying your property without permission." },
+      { icon: "🛡️", title: "Legal Defence", desc: "Defence in criminal and civil matters connected to ownership of the property." },
+      { icon: "🏠", title: "Per-Property Cover", desc: "Cover stays with the property through any change in tenancy — no penalties within the policy period." },
+      { icon: "💰", title: "Rent Protection Option", desc: "Upgrade to include rent indemnity cover for residential properties, with legal expenses included as standard." },
+    ],
+  },
+  {
+    id: "landlord-emergency",
+    category: "Let Property",
+    categoryColor: "#F5A623",
+    title: "Landlord Home Emergency",
+    tagline: "Protect your rental property from unexpected emergencies — 24/7.",
+    icon: "🔧",
+    image: "https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=800&q=80",
+    description: "When an emergency strikes at your rental property, you need fast, reliable help. A nationwide network of qualified professionals is ready to handle everything from burst pipes to pest infestations, available around the clock.",
+    features: [
+      { icon: "🚿", title: "Plumbing & Drainage", desc: "Cover for blocked drains, toilets, and damaged internal drainage that could cause flooding." },
+      { icon: "🔥", title: "Central Heating", desc: "Assistance for failure or complete breakdown of the primary heating system — no seasonal restrictions." },
+      { icon: "⚡", title: "Loss of Utilities", desc: "Help when the internal gas, electricity, or water supply fails at the property." },
+      { icon: "🐛", title: "Pest Infestation", desc: "Removal of wasps, hornets, mice, rats, or cockroaches from the property." },
+      { icon: "🔑", title: "Lost Keys", desc: "A qualified locksmith deployed to enable access when the only available key is lost." },
+    ],
+  },
+  {
+    id: "landlord-excess",
+    category: "Let Property",
+    categoryColor: "#F5A623",
+    title: "Landlord Excess Protection",
+    tagline: "Don't let your landlord policy excess eat into your rental profits.",
+    icon: "🏠",
+    image: "https://images.unsplash.com/photo-1570129477492-45c003edd2be?w=800&q=80",
+    description: "When a successful claim is made on your landlord insurance, the excess you pay can be a significant cost. Landlord Excess Protection reimburses you for that excess, with flexible cover levels from £200 to £1,000.",
+    features: [
+      { icon: "📊", title: "Flexible Excess Levels", desc: "Choose the right level of protection, with cover ranging from £200 up to £1,000." },
+      { icon: "✅", title: "Simple Claims", desc: "Make a claim easily via the claims website or by calling the claims team on weekdays." },
+      { icon: "👥", title: "Managing Agents Covered", desc: "Policies can cover managing agents, provided names match between policies." },
+    ],
+  },
+  {
+    id: "pet-damage",
+    category: "Let Property",
+    categoryColor: "#F5A623",
+    title: "Pet Damage Protection",
+    tagline: "Accept pets with confidence — your property is protected.",
+    icon: "🐾",
+    image: "https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=800&q=80",
+    description: "More tenants than ever have pets, and allowing them can widen your pool of applicants. Pet Damage Protection covers up to £5,000 of damage to your fixtures, fittings, and contents caused by tenants' pets — filling the gap your core insurance leaves.",
+    features: [
+      { icon: "🛋️", title: "Fixtures & Fittings Cover", desc: "Protection for landlord-owned fixtures, fittings, and contents damaged by tenants' pets." },
+      { icon: "💷", title: "Up to £5,000 Cover", desc: "Comprehensive cover up to £5,000 per claim for pet-related damage." },
+      { icon: "✅", title: "1-Year Work Guarantee", desc: "Any permanent repair work carried out by our suppliers is guaranteed for 12 months." },
+      { icon: "🔄", title: "Recoverable Costs", desc: "The cost of any claim can be passed on to your tenant." },
+    ],
+  },
+  {
+    id: "home-legal",
+    category: "Personal",
+    categoryColor: "#5B4FBE",
+    title: "Home Legal Protection",
+    tagline: "Protecting your home, your family, and your rights.",
+    icon: "🏡",
+    image: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&q=80",
+    description: "Home Legal Protection provides comprehensive legal cover for you and your family. From property disputes to employment issues, identity theft to social media defamation — you'll have expert support when you need it.",
+    features: [
+      { icon: "🏠", title: "Home Disputes", desc: "Legal support for physical damage to your home, personal property, or infringement of home rights." },
+      { icon: "🏘️", title: "Property Sale & Purchase", desc: "Pursue or defend legal action from a breach of contract for the sale or purchase of your home." },
+      { icon: "🛒", title: "Consumer Disputes", desc: "Defence in matters connected to the purchasing and selling of personal goods or services." },
+      { icon: "📊", title: "Tax Protection", desc: "Accountancy fees covered if you're subject to an HMRC Full Enquiry." },
+      { icon: "👥", title: "Employment Disputes", desc: "Legal support for claims of unfair dismissal or unfair selection for redundancy." },
+      { icon: "🔐", title: "Identity Theft", desc: "Defence following an incident of ID theft, supported by a dedicated helpline." },
+      { icon: "🩹", title: "Personal Injury", desc: "Pursue civil claims for injuries caused by the negligence of another." },
+      { icon: "📱", title: "Social Media Defamation", desc: "Support if you're subjected to defamation via social media platforms." },
+    ],
+  },
+  {
+    id: "home-emergency",
+    category: "Personal",
+    categoryColor: "#5B4FBE",
+    title: "Home Emergency",
+    tagline: "When emergencies strike at home, help is just a phone call away.",
+    icon: "🏠",
+    image: "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=800&q=80",
+    description: "Working alongside your existing household buildings or contents policy, Home Emergency covers the cost of emergency call-out charges, labour, parts, and materials when unexpected problems hit your home.",
+    features: [
+      { icon: "🚿", title: "Plumbing & Drainage", desc: "Leaking pipes, blocked drains, and leaking radiators covered." },
+      { icon: "🔥", title: "Heating", desc: "Sudden failure of your central heating system or boiler." },
+      { icon: "⚡", title: "Loss of Utilities", desc: "Internal failure of your gas, electricity, or water supply." },
+      { icon: "🏠", title: "Roofing", desc: "Sudden and unforeseen roofing issues that need immediate attention." },
+      { icon: "🐛", title: "Pest Infestation", desc: "Removal of wasps, mice, rats, and cockroaches from your home." },
+      { icon: "🔒", title: "Security", desc: "Cover for damaged windows, doors, and lost keys to keep your home secure." },
+    ],
+  },
+  {
+    id: "home-excess",
+    category: "Personal",
+    categoryColor: "#5B4FBE",
+    title: "Home Excess Protection",
+    tagline: "Safeguard yourself against unexpected home insurance excess costs.",
+    icon: "🏠",
+    image: "https://images.unsplash.com/photo-1518780664697-55e3ad937233?w=800&q=80",
+    description: "When you need to claim on your home insurance, the excess can come at the worst possible time. Home Excess Protection lets you choose the right level of cover — from £50 to £2,000 — so you're never caught out by unexpected costs.",
+    features: [
+      { icon: "📊", title: "Flexible Cover Levels", desc: "Choose protection from £50 right through to £2,000 to match your home policy excess." },
+      { icon: "🏡", title: "Outbuildings Covered", desc: "Any outbuildings and their contents covered under your main home insurance are included." },
+      { icon: "🔄", title: "Multiple Claims", desc: "Cover continues throughout the policy period until your chosen aggregate limit is reached." },
+      { icon: "✅", title: "Easy Claims Process", desc: "Make a claim online or call our friendly claims team during weekdays." },
+    ],
+  },
 ];
 
+const CATEGORIES = [
+  { name: "Motor", color: "#E91E8B", icon: "🚗" },
+  { name: "Commercial", color: "#00A69C", icon: "🏢" },
+  { name: "Let Property", color: "#F5A623", icon: "🏘️" },
+  { name: "Personal", color: "#5B4FBE", icon: "🏡" },
+];
 
-const ARCHIVE_TYPES = {
-  email: { label: "Email Campaign", icon: "\u{1F4E7}", color: "#6366f1" },
-  social: { label: "Social Post", icon: "\u{1F4F1}", color: "#0284c7" },
-  print: { label: "Print Material", icon: "\u{1F5A8}", color: "#ca8a04" },
-  video: { label: "Video/Photo", icon: "\u{1F3AC}", color: "#dc2626" },
-  presentation: { label: "Presentation", icon: "\u{1F4CA}", color: "#16a34a" },
-  other: { label: "Other", icon: "\u{1F4CC}", color: "#64748b" },
-};
+// ═══════════════════════════════════════════════
+// CLAIMS CARD DATA
+// ═══════════════════════════════════════════════
+const CLAIMS_PRODUCTS = [
+  {
+    id: "motor-legal-claims",
+    title: "Motor Legal / Alps Complete",
+    icon: "🚗",
+    color: "#E91E8B",
+    headline: "In the event of an accident",
+    claimsPhone: "01260 241000",
+    steps: [
+      "Check that everyone is okay — if anyone is injured, call 999 immediately for an ambulance and the police.",
+      "Move to a safe place, providing you are not seriously injured.",
+      "Take photographs of the scene — include all vehicles involved and any visible damage.",
+      "Record the following: date and time of the accident, third party details (name, registration, vehicle make/model), and any witness details.",
+    ],
+    footerNote: "You can track your claim online using the Valid8 portal.",
+  },
+  {
+    id: "road-rescue-claims",
+    title: "Road Rescue (Breakdown)",
+    icon: "🔧",
+    color: "#0891B2",
+    headline: "In the event of a breakdown",
+    claimsPhone: "+44 1260 547059",
+    steps: [
+      "Call the number above.",
+      "Quote your vehicle registration — that's all you need.",
+    ],
+    footerNote: null,
+  },
+  {
+    id: "landlord-legal-claims",
+    title: "Landlord Legal",
+    icon: "🏘️",
+    color: "#F5A623",
+    headline: "Making a Landlord Legal claim",
+    claimsPhone: "01260 241000",
+    steps: [
+      "Call the number above and follow the prompts for Landlord Legal claims.",
+      "Have your policy number or postcode ready so the team can locate your policy.",
+      "The team will guide you through setting up your claim.",
+    ],
+    footerNote: null,
+  },
+];
 
-function renderMarkdown(text) {
-  if (!text) return "";
-  return text
-    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
-    .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
-    .replace(/\*(.+?)\*/g, "<em>$1</em>")
-    .replace(/`(.+?)`/g, '<code style="background:var(--bg-card);padding:1px 5px;border-radius:3px;font-size:0.9em">$1</code>')
-    .replace(/\[(.+?)\]\((https?:\/\/.+?)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" style="color:var(--brand)">$1</a>')
-    .replace(/^- (.+)$/gm, '<span style="display:block;padding-left:16px">• $1</span>')
-    .replace(/\n/g, "<br>");
+// ═══════════════════════════════════════════════
+// UTILITY FUNCTIONS
+// ═══════════════════════════════════════════════
+function hexToHSL(hex) {
+  let r = parseInt(hex.slice(1, 3), 16) / 255;
+  let g = parseInt(hex.slice(3, 5), 16) / 255;
+  let b = parseInt(hex.slice(5, 7), 16) / 255;
+  let max = Math.max(r, g, b), min = Math.min(r, g, b);
+  let h, s, l = (max + min) / 2;
+  if (max === min) { h = s = 0; }
+  else {
+    let d = max - min;
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    switch (max) {
+      case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
+      case g: h = ((b - r) / d + 2) / 6; break;
+      case b: h = ((r - g) / d + 4) / 6; break;
+    }
+  }
+  return { h: Math.round(h * 360), s: Math.round(s * 100), l: Math.round(l * 100) };
 }
 
-async function getNextRef() {
-  const { data } = await supabase.from("tickets").select("ref").order("ref", { ascending: false }).limit(1);
-  if (!data || data.length === 0) return "M000";
-  const last = parseInt(data[0].ref.replace("M", ""), 10);
-  return "M" + String(last + 1).padStart(3, "0");
+function adjustColor(hex, lightness) {
+  const hsl = hexToHSL(hex);
+  return `hsl(${hsl.h}, ${hsl.s}%, ${lightness}%)`;
 }
 
-function formatDate(dateStr) {
-  if (!dateStr) return "No deadline";
-  const d = new Date(dateStr + "T00:00:00");
-  return d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
-}
+const FONT = "'Segoe UI', system-ui, -apple-system, sans-serif";
 
-function daysUntil(dateStr) {
-  if (!dateStr) return null;
-  const now = new Date();
-  now.setHours(0, 0, 0, 0);
-  const target = new Date(dateStr + "T00:00:00");
-  return Math.ceil((target - now) / (1000 * 60 * 60 * 24));
-}
-
-function getDueBadge(dateStr, status) {
-  if (status === "completed") return null;
-  const days = daysUntil(dateStr);
-  if (days === null) return null;
-  if (days < 0) return { text: Math.abs(days) + "d overdue", color: "#dc2626", bg: "rgba(220,38,38,0.08)", border: "rgba(220,38,38,0.2)" };
-  if (days === 0) return { text: "Due today", color: "#d97706", bg: "rgba(217,119,6,0.08)", border: "rgba(217,119,6,0.2)" };
-  if (days === 1) return { text: "Due tomorrow", color: "#d97706", bg: "rgba(217,119,6,0.08)", border: "rgba(217,119,6,0.2)" };
-  if (days <= 3) return { text: days + "d left", color: "#ea580c", bg: "rgba(234,88,12,0.08)", border: "rgba(234,88,12,0.2)" };
-  if (days <= 7) return { text: days + "d left", color: "#0284c7", bg: "rgba(2,132,199,0.08)", border: "rgba(2,132,199,0.2)" };
-  return { text: days + "d left", color: "#16a34a", bg: "rgba(22,163,74,0.08)", border: "rgba(22,163,74,0.2)" };
-}
-
-function FileChip({ name, url, onRemove }) {
-  const ext = name.split(".").pop().toLowerCase();
-  const icons = { pdf: "\u{1F4C4}", doc: "\u{1F4DD}", docx: "\u{1F4DD}", xls: "\u{1F4CA}", xlsx: "\u{1F4CA}", png: "\u{1F5BC}", jpg: "\u{1F5BC}", jpeg: "\u{1F5BC}", gif: "\u{1F5BC}", mp4: "\u{1F3AC}", zip: "\u{1F4E6}" };
-  const content = (
-    <span style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "var(--bg-input)", border: "1px solid var(--border)", borderRadius: 6, padding: "4px 10px", fontSize: 13, color: url ? "var(--brand)" : "#475569", cursor: url ? "pointer" : "default", transition: "all 0.2s", textDecoration: "none" }}>
-      <span>{icons[ext] || "\u{1F4CE}"}</span>
-      <span style={{ maxWidth: 150, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{name}</span>
-      {url && <span style={{ fontSize: 11, opacity: 0.5 }}>{"\u2197"}</span>}
-      {onRemove && <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); onRemove(); }} style={{ background: "none", border: "none", color: "#ef4444", cursor: "pointer", padding: 0, fontSize: 14, lineHeight: 1 }}>{"\u00D7"}</button>}
-    </span>
-  );
-  if (url) return <a href={url} target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none" }}>{content}</a>;
-  return content;
-}
-
-
-function HubHome({ onNavigate, tickets, dashUnlocked }) {
-  const activeCount = tickets.filter((t) => t.status !== "completed").length;
-  const features = [
-    { id: "form", icon: "\u{1F4DD}", title: "Submit a Ticket", desc: "Request marketing support for your next project", color: "#6366f1", ready: true },
-    { id: "tracker", icon: "\u{1F50D}", title: "Track a Ticket", desc: "Check the status of an existing request", color: "#0284c7", ready: true },
-    { id: "dashboard", icon: "\u{1F4CB}", title: "Ticket Dashboard", desc: activeCount > 0 ? activeCount + " active ticket" + (activeCount !== 1 ? "s" : "") : "Manage all marketing tickets", color: "#231d68", ready: true, badge: dashUnlocked && activeCount > 0 ? activeCount : null },
-    { id: "archive", icon: "\u{1F4DA}", title: "Marketing Archive", desc: "Browse outbound campaigns, posts, and materials", color: "#16a34a", ready: true },
-    { id: "footer", icon: "\u2709\uFE0F", title: "Email Footer Generator", desc: "Create branded email signatures", color: "#ea580c", ready: false },
-    { id: "assets", icon: "\u{1F3A8}", title: "Brand Assets", desc: "Download Alps logos, brand guidelines, and templates", color: "#ca8a04", ready: false },
+// ═══════════════════════════════════════════════
+// SHARED: TOP NAVIGATION BAR
+// ═══════════════════════════════════════════════
+function TopNav({ title }) {
+  const location = useLocation();
+  const tools = [
+    { path: "/product-sheet-generator", label: "Product Sheets" },
+    { path: "/claims-guidance-card", label: "Claims Cards" },
   ];
 
   return (
-    <div style={{ width: "100%", maxWidth: 720 }}>
-      <div style={{ textAlign: "center", marginBottom: 36 }}>
-        <h2 style={{ margin: "0 0 6px", fontSize: 26, fontWeight: 800, color: "var(--brand)", letterSpacing: "-0.01em" }}>Welcome to Marketing Hub</h2>
-        <p style={{ margin: 0, fontSize: 15, color: "var(--text-secondary)", lineHeight: 1.6 }}>Your central place for marketing requests, resources, and tools.</p>
+    <div style={{
+      background: "#fff",
+      borderBottom: "1px solid #e2e8f0",
+      padding: "0 24px",
+      display: "flex",
+      justifyContent: "space-between",
+      alignItems: "center",
+      position: "sticky",
+      top: 0,
+      zIndex: 100,
+      height: 56,
+      fontFamily: FONT,
+    }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        <Link to="/" style={{
+          width: 34, height: 34, borderRadius: 8,
+          background: "#f1f5f9", display: "flex", alignItems: "center", justifyContent: "center",
+          textDecoration: "none", fontSize: 16, color: "#475569",
+          border: "1px solid #e2e8f0", transition: "background 0.15s",
+        }}>
+          ⌂
+        </Link>
+        <span style={{ color: "#cbd5e1", fontSize: 14 }}>/</span>
+        <span style={{ fontSize: 14, fontWeight: 700, color: "#1e293b" }}>{title}</span>
       </div>
-      <div className="hub-home-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(210px, 1fr))", gap: 14 }}>
-        {features.map((f) => (
-          <button key={f.id} onClick={() => f.ready && onNavigate(f.id)} disabled={!f.ready} style={{ position: "relative", background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: 14, padding: "24px 20px", textAlign: "left", cursor: f.ready ? "pointer" : "default", transition: "all 0.2s", opacity: f.ready ? 1 : 0.55 }} onMouseOver={(e) => { if (f.ready) { e.currentTarget.style.boxShadow = "var(--shadow-hover)"; e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.borderColor = f.color; } }} onMouseOut={(e) => { e.currentTarget.style.boxShadow = "none"; e.currentTarget.style.transform = "none"; e.currentTarget.style.borderColor = "var(--border)"; }}>
-            <div style={{ fontSize: 28, marginBottom: 10 }}>{f.icon}</div>
-            <div style={{ fontSize: 15, fontWeight: 700, color: "var(--text-primary)", marginBottom: 4 }}>{f.title}</div>
-            <div style={{ fontSize: 13, color: "var(--text-secondary)", lineHeight: 1.5 }}>{f.desc}</div>
-            {f.badge && <span style={{ position: "absolute", top: 12, right: 12, width: 22, height: 22, borderRadius: "50%", background: "#dc2626", color: "#fff", fontSize: 11, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center" }}>{f.badge}</span>}
-            {!f.ready && <span style={{ position: "absolute", top: 12, right: 12, fontSize: 10, fontWeight: 700, padding: "3px 8px", borderRadius: 20, background: "var(--bar-bg)", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Coming Soon</span>}
-          </button>
+      <div style={{ display: "flex", gap: 6 }}>
+        {tools.map((t) => (
+          <Link key={t.path} to={t.path} style={{
+            padding: "6px 14px",
+            borderRadius: 20,
+            fontSize: 12,
+            fontWeight: 600,
+            textDecoration: "none",
+            background: location.pathname === t.path ? "#1e293b" : "#f1f5f9",
+            color: location.pathname === t.path ? "#fff" : "#64748b",
+            border: "1px solid",
+            borderColor: location.pathname === t.path ? "#1e293b" : "#e2e8f0",
+            transition: "all 0.15s",
+          }}>{t.label}</Link>
         ))}
       </div>
     </div>
   );
 }
 
-function PasswordGate({ onUnlock }) {
-  const [pw, setPw] = useState("");
-  const [error, setError] = useState(false);
-  const [shake, setShake] = useState(false);
-  const inputRef = useRef();
+// ═══════════════════════════════════════════════
+// PAGE: HOMEPAGE
+// ═══════════════════════════════════════════════
+function HomePage() {
+  const { profile } = useBrokerProfile();
 
-  useEffect(() => { inputRef.current?.focus(); }, []);
-
-  const handleSubmit = () => {
-    if (pw === DASHBOARD_PASSWORD) {
-      onUnlock();
-    } else {
-      setError(true);
-      setShake(true);
-      setTimeout(() => setShake(false), 500);
-      setPw("");
-      inputRef.current?.focus();
-    }
-  };
+  const tools = [
+    {
+      path: "/product-sheet-generator",
+      title: "Product Sheet Generator",
+      desc: "Create branded product PDFs for your clients",
+      icon: "📄",
+      color: "#E91E8B",
+    },
+    {
+      path: "/claims-guidance-card",
+      title: "Claims Guidance Card",
+      desc: "Generate branded claims cards for your clients at point of sale",
+      icon: "🃏",
+      color: "#0891B2",
+    },
+  ];
 
   return (
-    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "calc(100vh - 80px)", padding: 24 }}>
-      <div style={{ background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: 16, padding: 32, maxWidth: 400, width: "100%", textAlign: "center", animation: shake ? "shakeAnim 0.4s ease" : "none" }}>
-        <div style={{ width: 56, height: 56, borderRadius: 14, background: "rgba(35,29,104,0.08)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px", fontSize: 26 }}>{"\u{1F512}"}</div>
-        <h2 style={{ margin: "0 0 4px", fontSize: 20, fontWeight: 700, color: "var(--brand)" }}>Dashboard Access</h2>
-        <p style={{ margin: "0 0 24px", fontSize: 14, color: "var(--text-secondary)" }}>Enter the password to view the ticket dashboard.</p>
-        <div style={{ display: "flex", gap: 8 }}>
-          <input ref={inputRef} type="password" value={pw} onChange={(e) => { setPw(e.target.value); setError(false); }} onKeyDown={(e) => { if (e.key === "Enter") handleSubmit(); }} placeholder="Password" style={{ flex: 1, padding: "11px 14px", background: "var(--bg-input)", border: "1px solid " + (error ? "#ef4444" : "var(--border)"), borderRadius: 8, color: "var(--text-primary)", fontSize: 14, outline: "none", transition: "border 0.2s, box-shadow 0.2s" }} onFocus={(e) => { e.target.style.borderColor = error ? "#ef4444" : "var(--brand)"; e.target.style.boxShadow = "0 0 0 3px " + (error ? "rgba(239,68,68,0.1)" : "var(--brand-glow)"); }} onBlur={(e) => { e.target.style.borderColor = error ? "#ef4444" : "var(--border)"; e.target.style.boxShadow = "none"; }} />
-          <button onClick={handleSubmit} style={{ padding: "11px 20px", background: "var(--brand)", border: "none", borderRadius: 8, color: "#fff", fontSize: 14, fontWeight: 700, cursor: "pointer", transition: "all 0.2s", whiteSpace: "nowrap" }} onMouseOver={(e) => e.target.style.background = "var(--brand)"} onMouseOut={(e) => e.target.style.background = "var(--brand)"}>
-            Unlock
-          </button>
+    <div style={{
+      minHeight: "100vh",
+      background: "linear-gradient(170deg, #0f172a 0%, #1e293b 40%, #0f172a 100%)",
+      fontFamily: FONT,
+    }}>
+      {/* Header area */}
+      <div style={{ padding: "48px 24px 20px", textAlign: "center" }}>
+        <img src={ALPS_LOGO} alt="Alps" style={{ height: 48, objectFit: "contain", marginBottom: 20 }} />
+        <h1 style={{
+          fontSize: 36, fontWeight: 800, color: "#fff",
+          margin: "0 0 8px", letterSpacing: -1,
+        }}>
+          Broker Toolkit
+        </h1>
+        <p style={{
+          fontSize: 16, color: "#94a3b8", margin: 0, maxWidth: 460, marginInline: "auto",
+          lineHeight: 1.6,
+        }}>
+          Everything your team needs to support and win clients
+        </p>
+      </div>
+
+      {/* Profile status */}
+      <div style={{ textAlign: "center", marginBottom: 36 }}>
+        {profile ? (
+          <Link to="/broker-profile" style={{
+            display: "inline-flex", alignItems: "center", gap: 8,
+            padding: "8px 18px", borderRadius: 24,
+            background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)",
+            fontSize: 13, color: "#94a3b8", textDecoration: "none",
+            transition: "background 0.15s",
+          }}>
+            {profile.logoUrl && <img src={profile.logoUrl} alt="" style={{ height: 20, borderRadius: 4 }} />}
+            <span style={{ fontWeight: 600, color: "#e2e8f0" }}>{profile.brokerName}</span>
+            <span>· Edit Profile</span>
+          </Link>
+        ) : (
+          <Link to="/broker-profile" style={{
+            display: "inline-flex", alignItems: "center", gap: 6,
+            padding: "10px 22px", borderRadius: 24,
+            background: "linear-gradient(135deg, #E91E8B 0%, #F5A623 100%)",
+            fontSize: 13, fontWeight: 700, color: "#fff", textDecoration: "none",
+            transition: "transform 0.15s",
+          }}>
+            Set Up Your Broker Profile →
+          </Link>
+        )}
+      </div>
+
+      {/* Tool Cards */}
+      <div style={{
+        maxWidth: 720, margin: "0 auto", padding: "0 24px 60px",
+        display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 20,
+      }}>
+        {tools.map((tool) => (
+          <Link key={tool.path} to={tool.path} style={{
+            textDecoration: "none",
+            background: "rgba(255,255,255,0.04)",
+            border: "1px solid rgba(255,255,255,0.08)",
+            borderRadius: 16, padding: "32px 28px",
+            transition: "all 0.2s",
+            cursor: "pointer",
+            display: "block",
+          }}
+          onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.08)"; e.currentTarget.style.borderColor = tool.color; e.currentTarget.style.transform = "translateY(-2px)"; }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.04)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)"; e.currentTarget.style.transform = "none"; }}
+          >
+            <div style={{
+              width: 48, height: 48, borderRadius: 12,
+              background: `${tool.color}20`,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              fontSize: 24, marginBottom: 18,
+            }}>{tool.icon}</div>
+            <h3 style={{ margin: "0 0 8px", fontSize: 18, fontWeight: 700, color: "#f1f5f9" }}>
+              {tool.title}
+            </h3>
+            <p style={{ margin: 0, fontSize: 14, color: "#94a3b8", lineHeight: 1.5 }}>
+              {tool.desc}
+            </p>
+          </Link>
+        ))}
+
+        {/* Coming soon placeholder */}
+        <div style={{
+          background: "rgba(255,255,255,0.02)",
+          border: "1px dashed rgba(255,255,255,0.08)",
+          borderRadius: 16, padding: "32px 28px",
+          opacity: 0.5,
+        }}>
+          <div style={{
+            width: 48, height: 48, borderRadius: 12,
+            background: "rgba(255,255,255,0.04)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            fontSize: 24, marginBottom: 18, color: "#475569",
+          }}>🔜</div>
+          <h3 style={{ margin: "0 0 8px", fontSize: 18, fontWeight: 700, color: "#475569" }}>
+            More Tools Coming Soon
+          </h3>
+          <p style={{ margin: 0, fontSize: 14, color: "#475569", lineHeight: 1.5 }}>
+            We're building more tools to help you win and support clients.
+          </p>
         </div>
-        {error && <p style={{ margin: "12px 0 0", fontSize: 13, color: "#ef4444", fontWeight: 500 }}>Incorrect password. Please try again.</p>}
+      </div>
+
+      {/* Footer */}
+      <div style={{ textAlign: "center", padding: "0 24px 40px" }}>
+        <p style={{ fontSize: 10, color: "#475569", margin: "0 0 4px" }}>
+          If you experience any problems, or require any assistance, please get in touch with marketing at{" "}
+          <a href="mailto:tom.thomas@alpsltd.co.uk" style={{ color: "#64748b" }}>tom.thomas@alpsltd.co.uk</a>
+        </p>
+        <p style={{ fontSize: 9, color: "#334155" }}>v2.0</p>
       </div>
     </div>
   );
 }
 
-function TicketForm({ onSubmit }) {
-  const [form, setForm] = useState({ name: "", title: "", description: "", priority: "medium", deadline: "", files: [] });
-  const [errors, setErrors] = useState({});
-  const [submitting, setSubmitting] = useState(false);
-  const fileRef = useRef();
+// ═══════════════════════════════════════════════
+// PAGE: BROKER PROFILE
+// ═══════════════════════════════════════════════
+function BrokerProfilePage() {
+  const { profile, saveProfile } = useBrokerProfile();
+  const [form, setForm] = useState(profile || {
+    brokerName: "", logoUrl: "", brandColor: "#1a3a5c", secondaryColor: "#E91E8B",
+    fcaNumber: "", phone: "", email: "", website: "",
+  });
+  const [saved, setSaved] = useState(false);
+  const fileRef = useRef(null);
 
-  const update = (field, value) => {
-    setForm((f) => ({ ...f, [field]: value }));
-    if (errors[field]) setErrors((e) => ({ ...e, [field]: null }));
+  const handleLogo = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (ev) => setForm((f) => ({ ...f, logoUrl: ev.target.result }));
+      reader.readAsDataURL(file);
+    }
   };
 
-  const handleFiles = (e) => {
-    const newFiles = Array.from(e.target.files);
-    setForm((f) => ({ ...f, files: [...f.files, ...newFiles].slice(0, 5) }));
-    e.target.value = "";
+  const handleSave = () => {
+    saveProfile(form);
+    setSaved(true);
+    setTimeout(() => setSaved(false), 3000);
   };
 
-  const removeFile = (idx) => setForm((f) => ({ ...f, files: f.files.filter((_, i) => i !== idx) }));
-
-  const validate = () => {
-    const e = {};
-    if (!form.name.trim()) e.name = "Name is required";
-    if (!form.title.trim()) e.title = "Task title is required";
-    if (!form.description.trim()) e.description = "Description is required";
-    setErrors(e);
-    return Object.keys(e).length === 0;
+  const inputStyle = {
+    width: "100%", padding: "12px 16px",
+    border: "2px solid #e2e8f0", borderRadius: 10,
+    fontSize: 14, fontFamily: "inherit", outline: "none",
+    background: "#fff", boxSizing: "border-box",
   };
-
-  const handleSubmit = async () => {
-    if (!validate()) return;
-    setSubmitting(true);
-    await onSubmit({ ...form, actualFiles: form.files });
-    setForm({ name: "", title: "", description: "", priority: "medium", deadline: "", files: [] });
-    setSubmitting(false);
+  const labelStyle = {
+    display: "block", fontSize: 12, fontWeight: 700,
+    color: "#475569", marginBottom: 6,
+    textTransform: "uppercase", letterSpacing: 0.8,
   };
-
-  const today = new Date().toISOString().split("T")[0];
-  const inputStyle = (field) => ({ width: "100%", padding: "11px 14px", background: "var(--bg-input)", border: "1px solid " + (errors[field] ? "#ef4444" : "var(--border)"), borderRadius: 8, color: "var(--text-primary)", fontSize: 14, outline: "none", transition: "border 0.2s, box-shadow 0.2s", boxSizing: "border-box" });
-  const labelStyle = { display: "block", fontSize: 13, fontWeight: 600, color: "var(--brand)", marginBottom: 6, letterSpacing: "0.02em" };
 
   return (
-    <div style={{ background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: 16, padding: 28, maxWidth: 560, width: "100%" }}>
-      <h2 style={{ margin: "0 0 4px", fontSize: 22, fontWeight: 700, color: "var(--brand)" }}>Submit a Request</h2>
-      <p style={{ margin: "0 0 20px", fontSize: 14, color: "var(--text-secondary)", lineHeight: 1.6 }}>Please fill in the form to submit a ticket, and I'll get right on it. Once your ticket is complete, I will notify you.</p>
+    <div style={{ minHeight: "100vh", background: "#f1f5f9", fontFamily: FONT }}>
+      <TopNav title="Broker Profile" />
+      <div style={{ maxWidth: 560, margin: "0 auto", padding: "36px 20px 60px" }}>
+        <div style={{
+          background: "#fff", borderRadius: 20, padding: "40px 36px",
+          boxShadow: "0 8px 40px rgba(0,0,0,0.06)",
+        }}>
+          <div style={{ textAlign: "center", marginBottom: 32 }}>
+            <h2 style={{ margin: "0 0 6px", fontSize: 24, fontWeight: 800, color: "#1e293b" }}>
+              Your Broker Profile
+            </h2>
+            <p style={{ margin: 0, fontSize: 14, color: "#64748b" }}>
+              These details are applied across all tools automatically.
+            </p>
+          </div>
 
-      <div style={{ marginBottom: 20 }}>
-        <label style={{ ...labelStyle, marginBottom: 8 }}>Quick Templates</label>
-        <div className="hub-template-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 6 }}>
-          {TEMPLATES.map((tmpl, i) => (
-            <button key={i} onClick={() => { update("title", tmpl.title); update("description", tmpl.description); update("priority", tmpl.priority); }} style={{ padding: "10px 8px", background: "var(--bg-input)", border: "1px solid var(--border)", borderRadius: 8, cursor: "pointer", transition: "all 0.2s", textAlign: "center", fontSize: 11, fontWeight: 600, color: "var(--text-body)", lineHeight: 1.3 }} onMouseOver={(e) => { e.currentTarget.style.borderColor = "var(--brand)"; e.currentTarget.style.background = "rgba(35,29,104,0.03)"; }} onMouseOut={(e) => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.background = "#fff"; }}>
-              <div style={{ fontSize: 18, marginBottom: 4 }}>{tmpl.icon}</div>
-              {tmpl.label}
+          <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+            <div>
+              <label style={labelStyle}>Firm / Trading Name *</label>
+              <input style={inputStyle} placeholder="e.g. Smith & Partners Insurance"
+                value={form.brokerName} onChange={(e) => setForm((f) => ({ ...f, brokerName: e.target.value }))} />
+            </div>
+
+            <div>
+              <label style={labelStyle}>Your Logo</label>
+              <div onClick={() => fileRef.current?.click()} style={{
+                border: "2px dashed #cbd5e1", borderRadius: 10,
+                padding: "20px 16px", textAlign: "center",
+                cursor: "pointer", background: "#f8fafc",
+              }}>
+                {form.logoUrl ? (
+                  <div>
+                    <img src={form.logoUrl} alt="Logo" style={{ maxHeight: 50, maxWidth: 200, objectFit: "contain" }} />
+                    <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 8 }}>Click to change</div>
+                  </div>
+                ) : (
+                  <div>
+                    <div style={{ fontSize: 28, marginBottom: 4 }}>📤</div>
+                    <div style={{ fontSize: 13, color: "#64748b" }}>Click to upload your logo</div>
+                  </div>
+                )}
+              </div>
+              <input ref={fileRef} type="file" accept="image/*" style={{ display: "none" }} onChange={handleLogo} />
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+              <div>
+                <label style={labelStyle}>Primary Brand Colour</label>
+                <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                  <input type="color" value={form.brandColor}
+                    onChange={(e) => setForm((f) => ({ ...f, brandColor: e.target.value }))}
+                    style={{ width: 48, height: 40, border: "2px solid #e2e8f0", borderRadius: 8, cursor: "pointer", padding: 2 }} />
+                  <input style={{ ...inputStyle, flex: 1 }} value={form.brandColor}
+                    onChange={(e) => setForm((f) => ({ ...f, brandColor: e.target.value }))} />
+                </div>
+              </div>
+              <div>
+                <label style={labelStyle}>Secondary Colour</label>
+                <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                  <input type="color" value={form.secondaryColor}
+                    onChange={(e) => setForm((f) => ({ ...f, secondaryColor: e.target.value }))}
+                    style={{ width: 48, height: 40, border: "2px solid #e2e8f0", borderRadius: 8, cursor: "pointer", padding: 2 }} />
+                  <input style={{ ...inputStyle, flex: 1 }} value={form.secondaryColor}
+                    onChange={(e) => setForm((f) => ({ ...f, secondaryColor: e.target.value }))} />
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <label style={labelStyle}>FCA Reference Number</label>
+              <input style={inputStyle} placeholder="e.g. 123456" value={form.fcaNumber}
+                onChange={(e) => setForm((f) => ({ ...f, fcaNumber: e.target.value }))} />
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+              <div>
+                <label style={labelStyle}>Phone Number</label>
+                <input style={inputStyle} placeholder="01234 567890" value={form.phone}
+                  onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))} />
+              </div>
+              <div>
+                <label style={labelStyle}>Email Address</label>
+                <input style={inputStyle} placeholder="info@broker.co.uk" value={form.email}
+                  onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} />
+              </div>
+            </div>
+
+            <div>
+              <label style={labelStyle}>Website URL (optional)</label>
+              <input style={inputStyle} placeholder="www.broker.co.uk" value={form.website}
+                onChange={(e) => setForm((f) => ({ ...f, website: e.target.value }))} />
+            </div>
+
+            <button onClick={handleSave} disabled={!form.brokerName} style={{
+              width: "100%", padding: "16px 24px",
+              background: form.brokerName ? `linear-gradient(135deg, ${form.brandColor} 0%, ${adjustColor(form.brandColor, 30)} 100%)` : "#cbd5e1",
+              color: "#fff", border: "none", borderRadius: 12,
+              fontSize: 16, fontWeight: 700,
+              cursor: form.brokerName ? "pointer" : "not-allowed",
+            }}>
+              {saved ? "✓ Profile Saved!" : "Save Profile"}
             </button>
+
+            <p style={{ fontSize: 11, color: "#94a3b8", textAlign: "center", margin: 0, lineHeight: 1.6 }}>
+              Your details are saved locally on this device. You'll need to re-enter them if using a different browser or device.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════
+// PRODUCT SHEET COMPONENTS (existing tool)
+// ═══════════════════════════════════════════════
+function ProductSheet({ product, config }) {
+  const brandColor = config.brandColor || "#1a3a5c";
+  const lightBg = adjustColor(brandColor, 95);
+  const medBg = adjustColor(brandColor, 88);
+  const darkText = adjustColor(brandColor, 15);
+
+  return (
+    <div style={{
+      width: "100%", maxWidth: 850, margin: "0 auto 40px",
+      background: "#fff", borderRadius: 16, overflow: "hidden",
+      boxShadow: "0 4px 24px rgba(0,0,0,0.08)",
+      fontFamily: FONT, pageBreakAfter: "always",
+    }}>
+      {/* Header Banner */}
+      <div style={{
+        background: `linear-gradient(135deg, ${brandColor} 0%, ${adjustColor(brandColor, 30)} 100%)`,
+        padding: "36px 40px 32px", position: "relative", overflow: "hidden",
+      }}>
+        <div style={{
+          position: "absolute", top: -40, right: -40,
+          width: 200, height: 200, borderRadius: "50%",
+          background: "rgba(255,255,255,0.06)",
+        }} />
+        <div style={{
+          position: "absolute", bottom: -60, right: 100,
+          width: 160, height: 160, borderRadius: "50%",
+          background: "rgba(255,255,255,0.04)",
+        }} />
+
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
+          <div style={{
+            display: "inline-flex", alignItems: "center", gap: 6,
+            background: "rgba(255,255,255,0.15)", borderRadius: 20,
+            padding: "4px 14px", fontSize: 12, color: "#fff",
+            fontWeight: 600, letterSpacing: 0.5, textTransform: "uppercase",
+          }}>
+            <span>{product.icon}</span>
+            {product.category} Add-On
+          </div>
+          {config.logoUrl && (
+            <div style={{
+              background: "#fff", borderRadius: 10, padding: "6px 14px",
+              display: "inline-flex", alignItems: "center", justifyContent: "center",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+            }}>
+              <img src={config.logoUrl} alt={config.brokerName}
+                style={{ maxHeight: 36, maxWidth: 150, objectFit: "contain", display: "block" }}
+                onError={(e) => { e.target.parentElement.style.display = "none"; }} />
+            </div>
+          )}
+        </div>
+
+        <h2 style={{ margin: 0, fontSize: 32, fontWeight: 800, color: "#fff", lineHeight: 1.15, letterSpacing: -0.5 }}>
+          {product.title}
+        </h2>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", gap: 16 }}>
+          <p style={{ margin: "10px 0 0", fontSize: 16, color: "rgba(255,255,255,0.85)", lineHeight: 1.5, maxWidth: 600, flex: 1 }}>
+            {product.tagline}
+          </p>
+          {config.showPricing && config.prices[product.id] && (
+            <div style={{
+              background: "#fff", borderRadius: 12, padding: "8px 18px",
+              textAlign: "center", flexShrink: 0, boxShadow: "0 2px 8px rgba(0,0,0,0.12)",
+            }}>
+              <div style={{ fontSize: 10, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: 0.5 }}>From</div>
+              <div style={{ fontSize: 24, fontWeight: 800, color: brandColor, lineHeight: 1.1 }}>£{config.prices[product.id]}</div>
+              <div style={{ fontSize: 9, color: "#94a3b8", fontWeight: 600 }}>per year</div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Image + Description */}
+      <div style={{ display: "flex", gap: 0 }}>
+        <div style={{
+          flex: "0 0 280px", minHeight: 200,
+          backgroundImage: `url(${product.image})`,
+          backgroundSize: "cover", backgroundPosition: "center",
+        }} />
+        <div style={{ flex: 1, padding: "28px 32px" }}>
+          <p style={{ margin: 0, fontSize: 14.5, lineHeight: 1.7, color: "#444" }}>
+            {product.description}
+          </p>
+        </div>
+      </div>
+
+      {/* Features Grid */}
+      <div style={{ padding: "24px 32px 28px", background: lightBg }}>
+        <h3 style={{
+          margin: "0 0 18px", fontSize: 18, fontWeight: 700, color: darkText,
+          display: "flex", alignItems: "center", gap: 8,
+        }}>
+          <span style={{ width: 32, height: 3, background: brandColor, borderRadius: 2, display: "inline-block" }} />
+          What's Covered
+        </h3>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
+          {product.features.map((feature, i) => (
+            <div key={i} style={{
+              background: "#fff", borderRadius: 10, padding: "16px 18px",
+              display: "flex", gap: 12, alignItems: "flex-start",
+              border: `1px solid ${medBg}`,
+            }}>
+              <span style={{
+                fontSize: 22, flexShrink: 0, width: 36, height: 36,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                background: lightBg, borderRadius: 8,
+              }}>{feature.icon}</span>
+              <div>
+                <div style={{ fontWeight: 700, fontSize: 13.5, color: darkText, marginBottom: 3 }}>{feature.title}</div>
+                <div style={{ fontSize: 12.5, color: "#666", lineHeight: 1.55 }}>{feature.desc}</div>
+              </div>
+            </div>
           ))}
         </div>
       </div>
 
-      <div style={{ marginBottom: 16 }}>
-        <label style={labelStyle}>Your Name *</label>
-        <input style={inputStyle("name")} placeholder="e.g. Sarah Johnson" value={form.name} onChange={(e) => update("name", e.target.value)} onFocus={(e) => { e.target.style.borderColor = "var(--brand)"; e.target.style.boxShadow = "0 0 0 3px var(--brand-glow)"; }} onBlur={(e) => { e.target.style.borderColor = errors.name ? "#ef4444" : "var(--border)"; e.target.style.boxShadow = "none"; }} />
-        {errors.name && <span style={{ fontSize: 12, color: "#ef4444", marginTop: 4, display: "block" }}>{errors.name}</span>}
-      </div>
-
-      <div style={{ marginBottom: 16 }}>
-        <label style={labelStyle}>Task Title *</label>
-        <input style={inputStyle("title")} placeholder="e.g. Update Q1 social media calendar" value={form.title} onChange={(e) => update("title", e.target.value)} onFocus={(e) => { e.target.style.borderColor = "var(--brand)"; e.target.style.boxShadow = "0 0 0 3px var(--brand-glow)"; }} onBlur={(e) => { e.target.style.borderColor = errors.title ? "#ef4444" : "var(--border)"; e.target.style.boxShadow = "none"; }} />
-        {errors.title && <span style={{ fontSize: 12, color: "#ef4444", marginTop: 4, display: "block" }}>{errors.title}</span>}
-      </div>
-
-      <div style={{ marginBottom: 16 }}>
-        <label style={labelStyle}>Description *</label>
-        <textarea rows={4} style={{ ...inputStyle("description"), resize: "vertical", fontFamily: "inherit" }} placeholder="Describe what you need - include any relevant details, links, or specs..." value={form.description} onChange={(e) => update("description", e.target.value)} onFocus={(e) => { e.target.style.borderColor = "var(--brand)"; e.target.style.boxShadow = "0 0 0 3px var(--brand-glow)"; }} onBlur={(e) => { e.target.style.borderColor = errors.description ? "#ef4444" : "var(--border)"; e.target.style.boxShadow = "none"; }} />
-        {errors.description && <span style={{ fontSize: 12, color: "#ef4444", marginTop: 4, display: "block" }}>{errors.description}</span>}
-        <span style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 4, display: "block" }}>Supports **bold**, *italic*, `code`, - bullet lists, and [links](url)</span>
-      </div>
-
-      <div className="hub-priority-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 16 }}>
-        <div>
-          <label style={labelStyle}>Priority</label>
-          <div style={{ display: "flex", gap: 6 }}>
-            {Object.entries(PRIORITIES).map(([key, p]) => (
-              <button key={key} onClick={() => update("priority", key)} style={{ flex: 1, padding: "8px 4px", borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: "pointer", transition: "all 0.2s", background: form.priority === key ? p.bg : "var(--bg-input)", border: "1.5px solid " + (form.priority === key ? p.color : "var(--border)"), color: form.priority === key ? p.color : "var(--text-muted)" }}>
-                <span style={{ display: "block", fontSize: 14, marginBottom: 2 }}>{p.icon}</span>
-                {p.label}
-              </button>
-            ))}
-          </div>
+      {/* Footer */}
+      <div style={{
+        padding: "18px 32px", background: adjustColor(brandColor, 97),
+        borderTop: `1px solid ${medBg}`,
+        display: "flex", justifyContent: "space-between", alignItems: "center",
+        flexWrap: "wrap", gap: 12,
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
+          {config.brokerName && <span style={{ fontSize: 13, fontWeight: 700, color: darkText }}>{config.brokerName}</span>}
+          {config.phone && <span style={{ fontSize: 13, color: "#555" }}>📞 {config.phone}</span>}
+          {config.email && <span style={{ fontSize: 13, color: "#555" }}>✉️ {config.email}</span>}
         </div>
-        <div>
-          <label style={labelStyle}>Deadline</label>
-          <input type="date" min={today} style={{ ...inputStyle(null), cursor: "pointer" }} value={form.deadline} onChange={(e) => update("deadline", e.target.value)} />
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 2 }}>
+          {config.fcaNumber && (
+            <span style={{ fontSize: 10.5, color: "#999" }}>
+              Authorised & Regulated by the FCA | Ref: {config.fcaNumber}
+            </span>
+          )}
+          {config.footerMessage && (
+            <span style={{ fontSize: 10.5, color: "#888", fontStyle: "italic" }}>{config.footerMessage}</span>
+          )}
         </div>
       </div>
-
-      <div style={{ marginBottom: 24 }}>
-        <label style={labelStyle}>Attachments <span style={{ fontWeight: 400, opacity: 0.6 }}>(max 5 files)</span></label>
-        <input ref={fileRef} type="file" multiple style={{ display: "none" }} onChange={handleFiles} />
-        <button onClick={() => fileRef.current?.click()} style={{ padding: "10px 18px", background: "var(--bg-input)", border: "1px dashed var(--border)", borderRadius: 8, color: "var(--text-secondary)", cursor: "pointer", fontSize: 13, transition: "all 0.2s", width: "100%" }} onMouseOver={(e) => { e.target.style.background = "#f8fafc"; e.target.style.borderColor = "var(--brand)"; }} onMouseOut={(e) => { e.target.style.background = "#fff"; e.target.style.borderColor = "var(--border)"; }}>
-          {"\u{1F4CE}"} Click to attach files
-        </button>
-        {form.files.length > 0 && (
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 10 }}>
-            {form.files.map((f, i) => <FileChip key={i} name={f.name} onRemove={() => removeFile(i)} />)}
-          </div>
-        )}
-      </div>
-
-      <button onClick={handleSubmit} disabled={submitting} style={{ width: "100%", padding: "13px", background: submitting ? "var(--brand)" : "var(--brand)", border: "none", borderRadius: 10, color: "#fff", fontSize: 15, fontWeight: 700, cursor: submitting ? "wait" : "pointer", transition: "all 0.2s", letterSpacing: "0.02em", boxShadow: "0 4px 14px var(--brand-glow)" }} onMouseOver={(e) => { if (!submitting) { e.target.style.background = "var(--brand)"; e.target.style.boxShadow = "0 6px 20px var(--brand-glow)"; } }} onMouseOut={(e) => { e.target.style.background = "var(--brand)"; e.target.style.boxShadow = "0 4px 14px var(--brand-glow)"; }}>
-        {submitting ? "Submitting\u2026" : "Submit Ticket \u2192"}
-      </button>
     </div>
   );
 }
 
-function TicketCard({ ticket, onStatusChange, onComplete, onAddNote, onDelete, onUpdatePriority, onUpdateDeadline, onReopen, onTogglePin }) {
-  const [expanded, setExpanded] = useState(false);
-  const [noteText, setNoteText] = useState("");
-  const [noteName, setNoteName] = useState("");
-  const [confirmDelete, setConfirmDelete] = useState(false);
-  const [editingPriority, setEditingPriority] = useState(false);
-  const [editingDeadline, setEditingDeadline] = useState(false);
-  const [newDeadline, setNewDeadline] = useState(ticket.deadline || "");
-  const p = PRIORITIES[ticket.priority];
-  const s = STATUS[ticket.status];
-  const dueBadge = getDueBadge(ticket.deadline, ticket.status);
-  const today = new Date().toISOString().split("T")[0];
+function CategoryFilter({ selectedCategory, setSelectedCategory }) {
+  return (
+    <div style={{ display: "flex", gap: 8, justifyContent: "center", flexWrap: "wrap", marginBottom: 28 }}>
+      <button onClick={() => setSelectedCategory(null)} style={{
+        padding: "8px 20px", borderRadius: 24, border: "2px solid",
+        borderColor: !selectedCategory ? "#1e293b" : "#e2e8f0",
+        background: !selectedCategory ? "#1e293b" : "#fff",
+        color: !selectedCategory ? "#fff" : "#64748b",
+        fontSize: 13, fontWeight: 600, cursor: "pointer",
+      }}>All Products ({PRODUCTS.length})</button>
+      {CATEGORIES.map((cat) => {
+        const count = PRODUCTS.filter((p) => p.category === cat.name).length;
+        return (
+          <button key={cat.name} onClick={() => setSelectedCategory(cat.name)} style={{
+            padding: "8px 20px", borderRadius: 24, border: "2px solid",
+            borderColor: selectedCategory === cat.name ? cat.color : "#e2e8f0",
+            background: selectedCategory === cat.name ? cat.color : "#fff",
+            color: selectedCategory === cat.name ? "#fff" : "#64748b",
+            fontSize: 13, fontWeight: 600, cursor: "pointer",
+          }}>{cat.icon} {cat.name} ({count})</button>
+        );
+      })}
+    </div>
+  );
+}
 
-  const submitNote = () => {
-    if (!noteText.trim() || !noteName.trim()) return;
-    onAddNote(ticket.id, noteName.trim(), noteText.trim());
-    setNoteText("");
-    setNoteName("");
+function PSGConfigPanel({ config, setConfig, onGenerate }) {
+  const fileInputRef = useRef(null);
+
+  const handleLogoUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (ev) => setConfig((c) => ({ ...c, logoUrl: ev.target.result }));
+      reader.readAsDataURL(file);
+    }
   };
 
-  const handlePriorityChange = (newPriority) => {
-    if (newPriority !== ticket.priority) {
-      onUpdatePriority(ticket.id, newPriority);
-    }
-    setEditingPriority(false);
+  const inputStyle = {
+    width: "100%", padding: "12px 16px",
+    border: "2px solid #e2e8f0", borderRadius: 10,
+    fontSize: 14, fontFamily: "inherit", outline: "none",
+    background: "#fff", boxSizing: "border-box",
   };
-
-  const handleDeadlineSave = () => {
-    if (newDeadline !== ticket.deadline) {
-      onUpdateDeadline(ticket.id, newDeadline);
-    }
-    setEditingDeadline(false);
+  const labelStyle = {
+    display: "block", fontSize: 12, fontWeight: 700,
+    color: "#475569", marginBottom: 6,
+    textTransform: "uppercase", letterSpacing: 0.8,
   };
 
   return (
-    <div onClick={() => setExpanded(!expanded)} style={{ background: ticket.status === "completed" ? "var(--bg-completed)" : "var(--bg-card)", border: "1px solid " + (ticket.status === "completed" ? "var(--border-light)" : dueBadge && dueBadge.color === "#dc2626" ? "rgba(220,38,38,0.25)" : "var(--border)"), borderRadius: 12, padding: "16px 20px", cursor: "pointer", transition: "all 0.2s", opacity: ticket.status === "completed" ? 0.65 : 1 }} onMouseOver={(e) => { e.currentTarget.style.boxShadow = "var(--shadow-hover)"; e.currentTarget.style.transform = "translateY(-1px)"; }} onMouseOut={(e) => { e.currentTarget.style.boxShadow = "none"; e.currentTarget.style.transform = "none"; }}>
-      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6, flexWrap: "wrap" }}>
-            <span style={{ fontSize: 12, fontFamily: "monospace", color: "var(--brand)", fontWeight: 700, letterSpacing: "0.04em", background: "var(--brand-light)", padding: "2px 7px", borderRadius: 4 }}>{ticket.id}</span>
-            <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 20, background: p.bg, color: p.color, border: "1px solid " + p.border, letterSpacing: "0.03em" }}>{p.icon} {p.label}</span>
-            <span style={{ fontSize: 11, fontWeight: 600, padding: "2px 8px", borderRadius: 20, background: s.bg, color: s.color, letterSpacing: "0.03em" }}>{s.label}</span>
-            {dueBadge && <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 20, background: dueBadge.bg, color: dueBadge.color, border: "1px solid " + dueBadge.border }}>{dueBadge.text}</span>}
-          </div>
-          <h3 style={{ margin: 0, fontSize: 15, fontWeight: 600, color: "var(--brand)", textDecoration: ticket.status === "completed" ? "line-through" : "none", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: expanded ? "normal" : "nowrap" }}>{ticket.title}</h3>
-          <div style={{ fontSize: 13, color: "var(--text-secondary)", marginTop: 4, display: "flex", gap: 14, flexWrap: "wrap" }}>
-            <span>{"\u{1F464}"} {ticket.name}</span>
-            <span>{"\u{1F4C5}"} {formatDate(ticket.deadline)}</span>
-            <span style={{ opacity: 0.6 }}>Created {new Date(ticket.createdAt).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}</span>
-            {ticket.completedAt && <span style={{ color: "#16a34a" }}>{"\u2713"} Completed {new Date(ticket.completedAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}</span>}
-          </div>
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0, marginTop: 4 }}>
-          <span onClick={(e) => { e.stopPropagation(); onTogglePin(ticket.id); }} style={{ fontSize: 16, cursor: "pointer", transition: "all 0.15s", color: ticket.pinned ? "#eab308" : "#d1d5db", filter: ticket.pinned ? "drop-shadow(0 0 2px rgba(234,179,8,0.4))" : "none" }} title={ticket.pinned ? "Unpin ticket" : "Pin ticket"}>{ticket.pinned ? "\u2605" : "\u2606"}</span>
-          <span style={{ fontSize: 18, color: "var(--text-muted)", transition: "transform 0.2s", transform: expanded ? "rotate(180deg)" : "none" }}>{"\u25BE"}</span>
-        </div>
+    <div style={{
+      background: "#fff", borderRadius: 20, padding: "40px 36px",
+      boxShadow: "0 8px 40px rgba(0,0,0,0.08)", maxWidth: 520, margin: "0 auto",
+    }}>
+      <div style={{ textAlign: "center", marginBottom: 32 }}>
+        <div style={{
+          width: 56, height: 56, borderRadius: 14,
+          background: "linear-gradient(135deg, #1e293b 0%, #334155 100%)",
+          display: "inline-flex", alignItems: "center", justifyContent: "center",
+          fontSize: 26, marginBottom: 16,
+        }}>🏷️</div>
+        <h2 style={{ margin: "0 0 6px", fontSize: 24, fontWeight: 800, color: "#1e293b" }}>
+          Brand Your Product Sheets
+        </h2>
+        <p style={{ margin: 0, fontSize: 14, color: "#64748b" }}>
+          Your profile details have been pre-filled below. Adjust anything for this session.
+        </p>
       </div>
 
-      {expanded && (
-        <div style={{ marginTop: 16, paddingTop: 16, borderTop: "1px solid var(--border)" }} onClick={(e) => e.stopPropagation()}>
-          <div style={{ margin: "0 0 12px", fontSize: 14, color: "var(--text-body)", lineHeight: 1.6 }} dangerouslySetInnerHTML={{ __html: renderMarkdown(ticket.description) }}></div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+        <div>
+          <label style={labelStyle}>Brokerage Name *</label>
+          <input style={inputStyle} placeholder="e.g. Smith & Partners Insurance"
+            value={config.brokerName} onChange={(e) => setConfig((c) => ({ ...c, brokerName: e.target.value }))} />
+        </div>
 
-          {ticket.status !== "completed" && (
-            <div style={{ display: "flex", gap: 16, marginBottom: 14, flexWrap: "wrap" }}>
+        <div>
+          <label style={labelStyle}>Your Logo</label>
+          <div onClick={() => fileInputRef.current?.click()} style={{
+            border: "2px dashed #cbd5e1", borderRadius: 10,
+            padding: "20px 16px", textAlign: "center",
+            cursor: "pointer", background: "#f8fafc",
+          }}>
+            {config.logoUrl ? (
               <div>
-                <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 6 }}>Priority</div>
-                {editingPriority ? (
-                  <div style={{ display: "flex", gap: 4 }}>
-                    {Object.entries(PRIORITIES).map(([key, pr]) => (
-                      <button key={key} onClick={() => handlePriorityChange(key)} style={{ padding: "5px 10px", borderRadius: 6, fontSize: 11, fontWeight: 700, cursor: "pointer", border: "1.5px solid " + (ticket.priority === key ? pr.color : "var(--border)"), background: ticket.priority === key ? pr.bg : "var(--bg-input)", color: ticket.priority === key ? pr.color : "var(--text-muted)", transition: "all 0.15s" }}>
-                        {pr.icon} {pr.label}
-                      </button>
-                    ))}
-                    <button onClick={() => setEditingPriority(false)} style={{ padding: "5px 8px", border: "1px solid var(--border)", borderRadius: 6, background: "var(--bg-input)", color: "var(--text-muted)", fontSize: 11, cursor: "pointer" }}>{"\u2715"}</button>
-                  </div>
-                ) : (
-                  <button onClick={() => setEditingPriority(true)} style={{ padding: "5px 10px", borderRadius: 6, fontSize: 11, fontWeight: 700, cursor: "pointer", border: "1.5px solid " + p.border, background: p.bg, color: p.color, transition: "all 0.15s" }} title="Click to change priority">
-                    {p.icon} {p.label} {"\u270E"}
-                  </button>
-                )}
+                <img src={config.logoUrl} alt="Logo" style={{ maxHeight: 50, maxWidth: 200, objectFit: "contain" }} />
+                <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 8 }}>Click to change</div>
               </div>
+            ) : (
               <div>
-                <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 6 }}>Deadline</div>
-                {editingDeadline ? (
-                  <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
-                    <input type="date" min={today} value={newDeadline} onChange={(e) => setNewDeadline(e.target.value)} style={{ padding: "5px 10px", border: "1px solid var(--brand)", borderRadius: 6, fontSize: 12, color: "var(--text-primary)", outline: "none", boxShadow: "0 0 0 3px var(--brand-glow)" }} />
-                    <button onClick={handleDeadlineSave} style={{ padding: "5px 10px", background: "var(--brand)", border: "none", borderRadius: 6, color: "#fff", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>{"\u2713"} Save</button>
-                    <button onClick={() => { setEditingDeadline(false); setNewDeadline(ticket.deadline || ""); }} style={{ padding: "5px 8px", border: "1px solid var(--border)", borderRadius: 6, background: "var(--bg-input)", color: "var(--text-muted)", fontSize: 11, cursor: "pointer" }}>{"\u2715"}</button>
-                  </div>
-                ) : (
-                  <button onClick={() => { setNewDeadline(ticket.deadline || ""); setEditingDeadline(true); }} style={{ padding: "5px 10px", borderRadius: 6, fontSize: 11, fontWeight: 600, cursor: "pointer", border: "1px solid var(--border)", background: "var(--bg-input)", color: "var(--text-body)", transition: "all 0.15s" }} title="Click to change deadline">
-                    {"\u{1F4C5}"} {ticket.deadline ? formatDate(ticket.deadline) : "No deadline"} {"\u270E"}
-                  </button>
-                )}
+                <div style={{ fontSize: 28, marginBottom: 4 }}>📤</div>
+                <div style={{ fontSize: 13, color: "#64748b" }}>Click to upload your logo</div>
+                <div style={{ fontSize: 11, color: "#94a3b8" }}>PNG, JPG, or SVG</div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
+          <input ref={fileInputRef} type="file" accept="image/*" style={{ display: "none" }} onChange={handleLogoUpload} />
+        </div>
 
-          {ticket.files?.length > 0 && (
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 14 }}>
-              {ticket.files.map((f, i) => <FileChip key={i} name={f.name} url={f.url} />)}
-            </div>
-          )}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+          <div>
+            <label style={labelStyle}>Phone Number</label>
+            <input style={inputStyle} placeholder="01234 567890"
+              value={config.phone} onChange={(e) => setConfig((c) => ({ ...c, phone: e.target.value }))} />
+          </div>
+          <div>
+            <label style={labelStyle}>Email Address</label>
+            <input style={inputStyle} placeholder="info@broker.co.uk"
+              value={config.email} onChange={(e) => setConfig((c) => ({ ...c, email: e.target.value }))} />
+          </div>
+        </div>
 
-          {ticket.notes && ticket.notes.length > 0 && (
-            <div style={{ marginBottom: 14 }}>
-              <div style={{ fontSize: 12, fontWeight: 700, color: "var(--brand)", marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.05em" }}>Notes</div>
-              {ticket.notes.map((note, i) => (
-                <div key={i} style={{ background: note.auto ? "var(--brand-light)" : "var(--bg-input)", border: "1px solid " + (note.auto ? "rgba(35,29,104,0.1)" : "var(--border)"), borderRadius: 8, padding: "10px 14px", marginBottom: 6 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-                    <span style={{ fontSize: 12, fontWeight: 700, color: note.auto ? "#6366f1" : "var(--brand)" }}>{note.author}</span>
-                    <span style={{ fontSize: 11, color: "var(--text-muted)" }}>{new Date(note.timestamp).toLocaleDateString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</span>
+        <div>
+          <label style={labelStyle}>FCA Reference Number</label>
+          <input style={inputStyle} placeholder="e.g. 123456"
+            value={config.fcaNumber} onChange={(e) => setConfig((c) => ({ ...c, fcaNumber: e.target.value }))} />
+        </div>
+
+        <div>
+          <label style={labelStyle}>Brand Colour</label>
+          <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+            <input type="color" value={config.brandColor}
+              onChange={(e) => setConfig((c) => ({ ...c, brandColor: e.target.value }))}
+              style={{ width: 52, height: 44, border: "2px solid #e2e8f0", borderRadius: 10, cursor: "pointer", padding: 2 }} />
+            <input style={{ ...inputStyle, flex: 1 }} placeholder="#1a3a5c"
+              value={config.brandColor} onChange={(e) => setConfig((c) => ({ ...c, brandColor: e.target.value }))} />
+            <div style={{ display: "flex", gap: 4 }}>
+              {["#1a3a5c", "#14532d", "#7c2d12", "#581c87", "#991b1b", "#0c4a6e"].map((c) => (
+                <div key={c} onClick={() => setConfig((prev) => ({ ...prev, brandColor: c }))} style={{
+                  width: 26, height: 26, borderRadius: 6, background: c, cursor: "pointer",
+                  border: config.brandColor === c ? "3px solid #333" : "2px solid #e2e8f0",
+                }} />
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <label style={labelStyle}>Custom Footer Message (optional)</label>
+          <input style={inputStyle} placeholder="e.g. Protecting families since 1998"
+            value={config.footerMessage} onChange={(e) => setConfig((c) => ({ ...c, footerMessage: e.target.value }))} />
+        </div>
+
+        {/* Pricing Toggle */}
+        <div>
+          <label style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer", userSelect: "none" }}
+            onClick={() => setConfig((c) => ({ ...c, showPricing: !c.showPricing }))}>
+            <div style={{
+              width: 20, height: 20, borderRadius: 5,
+              border: `2px solid ${config.showPricing ? config.brandColor : "#cbd5e1"}`,
+              background: config.showPricing ? config.brandColor : "#fff",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              flexShrink: 0,
+            }}>
+              {config.showPricing && <span style={{ color: "#fff", fontSize: 13, fontWeight: 700, lineHeight: 1 }}>✓</span>}
+            </div>
+            <div>
+              <span style={{ fontSize: 13, fontWeight: 700, color: "#475569" }}>Add Pricing to Flyers</span>
+              <span style={{ fontSize: 11, color: "#94a3b8", marginLeft: 8 }}>Optional — only filled products will show a price</span>
+            </div>
+          </label>
+
+          {config.showPricing && (
+            <div style={{
+              marginTop: 14, padding: "16px 18px", background: "#f8fafc",
+              borderRadius: 12, border: "1px solid #e2e8f0",
+              display: "flex", flexDirection: "column", gap: 8,
+              maxHeight: 320, overflowY: "auto",
+            }}>
+              {PRODUCTS.map((p) => (
+                <div key={p.id} style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <span style={{
+                    fontSize: 8, color: "#fff", background: p.categoryColor,
+                    borderRadius: 4, padding: "2px 6px", fontWeight: 700,
+                    textTransform: "uppercase", flexShrink: 0, width: 72, textAlign: "center",
+                  }}>{p.category}</span>
+                  <span style={{ flex: 1, fontSize: 12.5, fontWeight: 600, color: "#334155" }}>{p.title}</span>
+                  <div style={{ position: "relative", flexShrink: 0, width: 100 }}>
+                    <span style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: "#94a3b8", fontSize: 13, fontWeight: 600 }}>£</span>
+                    <input style={{ ...inputStyle, padding: "8px 10px 8px 24px", fontSize: 13, width: 100, textAlign: "right" }}
+                      type="text" placeholder="—" value={config.prices[p.id] || ""}
+                      onChange={(e) => setConfig((c) => ({ ...c, prices: { ...c.prices, [p.id]: e.target.value } }))} />
                   </div>
-                  <p style={{ margin: 0, fontSize: 13, color: "var(--text-body)", lineHeight: 1.5, fontStyle: note.auto ? "italic" : "normal" }}>{note.text}</p>
                 </div>
               ))}
             </div>
           )}
-
-          <div style={{ marginBottom: 14 }}>
-            <div style={{ display: "flex", gap: 8 }}>
-              <input value={noteName} onChange={(e) => setNoteName(e.target.value)} placeholder="Your name" style={{ width: 130, padding: "8px 12px", background: "var(--bg-input)", border: "1px solid var(--border)", borderRadius: 8, color: "var(--text-primary)", fontSize: 13, outline: "none", flexShrink: 0 }} onFocus={(e) => { e.target.style.borderColor = "var(--brand)"; e.target.style.boxShadow = "0 0 0 3px var(--brand-glow)"; }} onBlur={(e) => { e.target.style.borderColor = "var(--border)"; e.target.style.boxShadow = "none"; }} />
-              <input value={noteText} onChange={(e) => setNoteText(e.target.value)} placeholder="Add a note..." onKeyDown={(e) => { if (e.key === "Enter") submitNote(); }} style={{ flex: 1, padding: "8px 12px", background: "var(--bg-input)", border: "1px solid var(--border)", borderRadius: 8, color: "var(--text-primary)", fontSize: 13, outline: "none" }} onFocus={(e) => { e.target.style.borderColor = "var(--brand)"; e.target.style.boxShadow = "0 0 0 3px var(--brand-glow)"; }} onBlur={(e) => { e.target.style.borderColor = "var(--border)"; e.target.style.boxShadow = "none"; }} />
-              <button onClick={submitNote} style={{ padding: "8px 14px", background: "var(--brand)", border: "none", borderRadius: 8, color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer", transition: "all 0.2s", whiteSpace: "nowrap" }} onMouseOver={(e) => e.target.style.background = "var(--brand)"} onMouseOut={(e) => e.target.style.background = "var(--brand)"}>
-                + Add
-              </button>
-            </div>
-          </div>
-
-          <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-            {ticket.status === "completed" && (
-              <button onClick={() => onReopen(ticket.id)} style={{ padding: "8px 16px", background: "rgba(99,102,241,0.1)", border: "1px solid rgba(99,102,241,0.25)", borderRadius: 8, color: "#6366f1", fontSize: 13, fontWeight: 600, cursor: "pointer", transition: "all 0.2s" }} onMouseOver={(e) => e.target.style.background = "rgba(99,102,241,0.18)"} onMouseOut={(e) => e.target.style.background = "rgba(99,102,241,0.1)"}>
-                {"\u21A9"} Reopen Ticket
-              </button>
-            )}
-            {ticket.status !== "completed" && (
-              <>
-                {ticket.status === "open" && (
-                  <button onClick={() => onStatusChange(ticket.id, "in_progress")} style={{ padding: "8px 16px", background: "rgba(2,132,199,0.1)", border: "1px solid rgba(2,132,199,0.25)", borderRadius: 8, color: "#0284c7", fontSize: 13, fontWeight: 600, cursor: "pointer", transition: "all 0.2s" }} onMouseOver={(e) => e.target.style.background = "rgba(2,132,199,0.18)"} onMouseOut={(e) => e.target.style.background = "rgba(2,132,199,0.1)"}>
-                    {"\u25B6"} Start Progress
-                  </button>
-                )}
-                <button onClick={() => onComplete(ticket.id)} style={{ padding: "8px 16px", background: "rgba(22,163,74,0.1)", border: "1px solid rgba(22,163,74,0.25)", borderRadius: 8, color: "#16a34a", fontSize: 13, fontWeight: 600, cursor: "pointer", transition: "all 0.2s" }} onMouseOver={(e) => e.target.style.background = "rgba(22,163,74,0.18)"} onMouseOut={(e) => e.target.style.background = "rgba(22,163,74,0.1)"}>
-                  {"\u2713"} Mark Complete
-                </button>
-              </>
-            )}
-            {!confirmDelete ? (
-              <button onClick={() => setConfirmDelete(true)} style={{ padding: "8px 16px", background: "rgba(220,38,38,0.06)", border: "1px solid rgba(220,38,38,0.2)", borderRadius: 8, color: "#dc2626", fontSize: 13, fontWeight: 600, cursor: "pointer", transition: "all 0.2s", marginLeft: "auto" }} onMouseOver={(e) => e.target.style.background = "rgba(220,38,38,0.12)"} onMouseOut={(e) => e.target.style.background = "rgba(220,38,38,0.06)"}>
-                {"\u{1F5D1}"} Delete
-              </button>
-            ) : (
-              <div style={{ display: "flex", gap: 6, alignItems: "center", marginLeft: "auto" }}>
-                <span style={{ fontSize: 12, color: "#dc2626", fontWeight: 600 }}>Are you sure?</span>
-                <button onClick={() => { onDelete(ticket.id); setConfirmDelete(false); }} style={{ padding: "6px 12px", background: "#dc2626", border: "none", borderRadius: 6, color: "#fff", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
-                  Yes, delete
-                </button>
-                <button onClick={() => setConfirmDelete(false)} style={{ padding: "6px 12px", background: "var(--bg-input)", border: "1px solid var(--border)", borderRadius: 6, color: "var(--text-secondary)", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
-                  Cancel
-                </button>
-              </div>
-            )}
-          </div>
         </div>
-      )}
-    </div>
-  );
-}
 
-function GridCard({ ticket, onStatusChange, onComplete, onDelete, onReopen, onTogglePin }) {
-  const [confirmDelete, setConfirmDelete] = useState(false);
-  const p = PRIORITIES[ticket.priority];
-  const s = STATUS[ticket.status];
-  const dueBadge = getDueBadge(ticket.deadline, ticket.status);
-  const isOverdue = dueBadge && dueBadge.color === "#dc2626";
-
-  return (
-    <div style={{ background: ticket.status === "completed" ? "var(--bg-completed)" : "var(--bg-card)", border: isOverdue ? "2px solid rgba(220,38,38,0.5)" : "1px solid " + (ticket.status === "completed" ? "var(--border-light)" : "var(--border)"), borderRadius: 10, padding: 14, opacity: ticket.status === "completed" ? 0.6 : 1, display: "flex", flexDirection: "column", gap: 8, transition: "all 0.2s", minHeight: 140, boxShadow: isOverdue ? "0 0 8px rgba(220,38,38,0.12)" : "none" }} onMouseOver={(e) => { e.currentTarget.style.boxShadow = isOverdue ? "0 2px 14px rgba(220,38,38,0.2)" : "0 2px 12px rgba(35,29,104,0.08)"; e.currentTarget.style.transform = "translateY(-1px)"; }} onMouseOut={(e) => { e.currentTarget.style.boxShadow = isOverdue ? "0 0 8px rgba(220,38,38,0.12)" : "none"; e.currentTarget.style.transform = "none"; }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
-        <span style={{ fontSize: 11, fontFamily: "monospace", color: "var(--brand)", fontWeight: 700, background: "var(--brand-light)", padding: "1px 6px", borderRadius: 3 }}>{ticket.id}</span>
-        <span style={{ fontSize: 10, fontWeight: 700, padding: "1px 6px", borderRadius: 12, background: p.bg, color: p.color, border: "1px solid " + p.border }}>{p.icon} {p.label}</span>
-        <span style={{ fontSize: 10, fontWeight: 600, padding: "1px 6px", borderRadius: 12, background: s.bg, color: s.color }}>{s.label}</span>
-        <span onClick={() => onTogglePin(ticket.id)} style={{ fontSize: 13, cursor: "pointer", marginLeft: "auto", color: ticket.pinned ? "#eab308" : "#d1d5db" }}>{ticket.pinned ? "\u2605" : "\u2606"}</span>
-      </div>
-      <h4 style={{ margin: 0, fontSize: 13, fontWeight: 600, color: "var(--brand)", textDecoration: ticket.status === "completed" ? "line-through" : "none", lineHeight: 1.3, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{ticket.title}</h4>
-      <div style={{ fontSize: 11, color: "var(--text-secondary)", display: "flex", flexDirection: "column", gap: 2, marginTop: "auto" }}>
-        <span>{"\u{1F464}"} {ticket.name}</span>
-        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-          <span>{"\u{1F4C5}"} {formatDate(ticket.deadline)}</span>
-          {dueBadge && <span style={{ fontSize: 10, fontWeight: 700, color: dueBadge.color }}>{dueBadge.text}</span>}
-        </div>
-        {ticket.completedAt && <span style={{ color: "#16a34a", fontSize: 10 }}>{"\u2713"} {new Date(ticket.completedAt).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}</span>}
-      </div>
-      {ticket.notes && ticket.notes.length > 0 && <span style={{ fontSize: 10, color: "var(--text-muted)" }}>{"\u{1F4DD}"} {ticket.notes.length} note{ticket.notes.length !== 1 ? "s" : ""}</span>}
-      <div style={{ display: "flex", gap: 4, flexWrap: "wrap", marginTop: 2 }}>
-        {ticket.status === "completed" && <button onClick={() => onReopen(ticket.id)} style={{ padding: "4px 8px", background: "rgba(99,102,241,0.1)", border: "1px solid rgba(99,102,241,0.2)", borderRadius: 5, color: "#6366f1", fontSize: 11, fontWeight: 600, cursor: "pointer" }}>{"\u21A9"}</button>}
-        {ticket.status === "open" && <button onClick={() => onStatusChange(ticket.id, "in_progress")} style={{ padding: "4px 8px", background: "rgba(2,132,199,0.1)", border: "1px solid rgba(2,132,199,0.2)", borderRadius: 5, color: "#0284c7", fontSize: 11, fontWeight: 600, cursor: "pointer" }}>{"\u25B6"}</button>}
-        {ticket.status !== "completed" && <button onClick={() => onComplete(ticket.id)} style={{ padding: "4px 8px", background: "rgba(22,163,74,0.1)", border: "1px solid rgba(22,163,74,0.2)", borderRadius: 5, color: "#16a34a", fontSize: 11, fontWeight: 600, cursor: "pointer" }}>{"\u2713"}</button>}
-        {!confirmDelete ? (
-          <button onClick={() => setConfirmDelete(true)} style={{ padding: "4px 8px", background: "rgba(220,38,38,0.06)", border: "1px solid rgba(220,38,38,0.15)", borderRadius: 5, color: "#dc2626", fontSize: 11, cursor: "pointer", marginLeft: "auto" }}>{"\u{1F5D1}"}</button>
-        ) : (
-          <div style={{ display: "flex", gap: 4, marginLeft: "auto", alignItems: "center" }}>
-            <button onClick={() => { onDelete(ticket.id); setConfirmDelete(false); }} style={{ padding: "4px 8px", background: "#dc2626", border: "none", borderRadius: 5, color: "#fff", fontSize: 10, fontWeight: 700, cursor: "pointer" }}>Delete</button>
-            <button onClick={() => setConfirmDelete(false)} style={{ padding: "4px 8px", background: "var(--bg-input)", border: "1px solid var(--border)", borderRadius: 5, color: "var(--text-secondary)", fontSize: 10, cursor: "pointer" }}>No</button>
-          </div>
-        )}
+        <button onClick={onGenerate} disabled={!config.brokerName} style={{
+          width: "100%", padding: "16px 24px",
+          background: config.brokerName ? `linear-gradient(135deg, ${config.brandColor} 0%, ${adjustColor(config.brandColor, 30)} 100%)` : "#cbd5e1",
+          color: "#fff", border: "none", borderRadius: 12, fontSize: 16, fontWeight: 700,
+          cursor: config.brokerName ? "pointer" : "not-allowed",
+        }}>
+          Generate Product Sheets →
+        </button>
       </div>
     </div>
   );
 }
 
-function StatsBar({ tickets }) {
-  const stats = {
-    total: tickets.length,
-    open: tickets.filter((t) => t.status === "open").length,
-    inProgress: tickets.filter((t) => t.status === "in_progress").length,
-    completed: tickets.filter((t) => t.status === "completed").length,
-    critical: tickets.filter((t) => t.priority === "critical" && t.status !== "completed").length,
-  };
-  const statCards = [
-    { label: "Total", value: stats.total, color: "var(--brand)", bg: "rgba(35,29,104,0.06)" },
-    { label: "Open", value: stats.open, color: "#6366f1", bg: "rgba(99,102,241,0.06)" },
-    { label: "In Progress", value: stats.inProgress, color: "#0284c7", bg: "rgba(2,132,199,0.06)" },
-    { label: "Completed", value: stats.completed, color: "#16a34a", bg: "rgba(22,163,74,0.06)" },
-    { label: "Critical", value: stats.critical, color: "#dc2626", bg: "rgba(220,38,38,0.06)" },
-  ];
-  return (
-    <div className="hub-stats-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))", gap: 10 }}>
-      {statCards.map((s) => (
-        <div key={s.label} style={{ background: s.bg, borderRadius: 10, padding: "14px 16px", border: "1px solid " + s.color + "15", textAlign: "center" }}>
-          <div style={{ fontSize: 26, fontWeight: 800, color: s.color }}>{s.value}</div>
-          <div style={{ fontSize: 12, color: "var(--text-secondary)", fontWeight: 500, marginTop: 2 }}>{s.label}</div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function AnalyticsPanel({ tickets }) {
-  const completedTickets = tickets.filter((t) => t.completedAt && t.createdAt);
-  const activeTickets = tickets.filter((t) => t.status !== "completed");
-  const now = new Date();
-
-  // Avg completion time
-  const avgCompletionHours = completedTickets.length > 0
-    ? completedTickets.reduce((sum, t) => sum + (new Date(t.completedAt) - new Date(t.createdAt)) / 3600000, 0) / completedTickets.length : 0;
-  const avgText = avgCompletionHours === 0 ? "--" : avgCompletionHours < 24 ? Math.round(avgCompletionHours) + "h" : (avgCompletionHours / 24).toFixed(1) + "d";
-
-  // Fastest / slowest
-  const completionTimes = completedTickets.map((t) => (new Date(t.completedAt) - new Date(t.createdAt)) / 3600000);
-  const fastestH = completionTimes.length > 0 ? Math.min(...completionTimes) : 0;
-  const slowestH = completionTimes.length > 0 ? Math.max(...completionTimes) : 0;
-  const fmtH = (h) => h === 0 ? "--" : h < 24 ? Math.round(h) + "h" : (h / 24).toFixed(1) + "d";
-
-  // Week calculations
-  const startOfWeek = new Date(now); startOfWeek.setDate(now.getDate() - now.getDay()); startOfWeek.setHours(0, 0, 0, 0);
-  const startOfLastWeek = new Date(startOfWeek); startOfLastWeek.setDate(startOfLastWeek.getDate() - 7);
-  const thisWeekCreated = tickets.filter((t) => new Date(t.createdAt) >= startOfWeek).length;
-  const lastWeekCreated = tickets.filter((t) => { const d = new Date(t.createdAt); return d >= startOfLastWeek && d < startOfWeek; }).length;
-  const thisWeekCompleted = completedTickets.filter((t) => new Date(t.completedAt) >= startOfWeek).length;
-  const lastWeekCompleted = completedTickets.filter((t) => { const d = new Date(t.completedAt); return d >= startOfLastWeek && d < startOfWeek; }).length;
-
-  // Monthly data (last 6 months)
-  const monthlyData = [];
-  for (let i = 5; i >= 0; i--) {
-    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    const end = new Date(now.getFullYear(), now.getMonth() - i + 1, 0, 23, 59, 59);
-    const label = d.toLocaleDateString("en-GB", { month: "short" });
-    const created = tickets.filter((t) => { const c = new Date(t.createdAt); return c >= d && c <= end; }).length;
-    const completed = completedTickets.filter((t) => { const c = new Date(t.completedAt); return c >= d && c <= end; }).length;
-    monthlyData.push({ label, created, completed });
-  }
-  const maxMonthly = Math.max(...monthlyData.map((m) => Math.max(m.created, m.completed)), 1);
-
-  // Priority breakdown (active)
-  const priorityBreakdown = { critical: 0, high: 0, medium: 0, low: 0 };
-  activeTickets.forEach((t) => { if (priorityBreakdown[t.priority] !== undefined) priorityBreakdown[t.priority]++; });
-  const maxPriority = Math.max(...Object.values(priorityBreakdown), 1);
-
-  // Status breakdown
-  const statusBreakdown = { open: 0, in_progress: 0, completed: 0 };
-  tickets.forEach((t) => { if (statusBreakdown[t.status] !== undefined) statusBreakdown[t.status]++; });
-
-  // Overdue / due soon
-  const overdueCount = activeTickets.filter((t) => { const d = daysUntil(t.deadline); return d !== null && d < 0; }).length;
-  const dueSoon = activeTickets.filter((t) => { const d = daysUntil(t.deadline); return d !== null && d >= 0 && d <= 3; }).length;
-
-  // Top submitters
-  const submitterCounts = {};
-  tickets.forEach((t) => { submitterCounts[t.name] = (submitterCounts[t.name] || 0) + 1; });
-  const topSubmitters = Object.entries(submitterCounts).sort((a, b) => b[1] - a[1]).slice(0, 8);
-  const maxSubmitter = topSubmitters.length > 0 ? topSubmitters[0][1] : 1;
-
-  // Avg per priority
-  const priorityAvg = {};
-  Object.keys(PRIORITIES).forEach((key) => {
-    const pts = completedTickets.filter((t) => t.priority === key);
-    if (pts.length > 0) {
-      const avg = pts.reduce((s, t) => s + (new Date(t.completedAt) - new Date(t.createdAt)) / 3600000, 0) / pts.length;
-      priorityAvg[key] = avg < 24 ? Math.round(avg) + "h" : (avg / 24).toFixed(1) + "d";
-    } else { priorityAvg[key] = "--"; }
+// ═══════════════════════════════════════════════
+// PAGE: PRODUCT SHEET GENERATOR
+// ═══════════════════════════════════════════════
+function ProductSheetGenerator() {
+  const { profile } = useBrokerProfile();
+  const [config, setConfig] = useState({
+    brokerName: profile?.brokerName || "",
+    logoUrl: profile?.logoUrl || "",
+    phone: profile?.phone || "",
+    email: profile?.email || "",
+    fcaNumber: profile?.fcaNumber || "",
+    brandColor: profile?.brandColor || "#1a3a5c",
+    footerMessage: "",
+    showPricing: false,
+    prices: {},
   });
+  const [view, setView] = useState("setup");
+  const [selectedCategory, setSelectedCategory] = useState(null);
+  const [selectedProducts, setSelectedProducts] = useState(new Set(PRODUCTS.map((p) => p.id)));
+  const printRef = useRef(null);
 
-  // Completion rate
-  const completionRate = tickets.length > 0 ? Math.round(completedTickets.length / tickets.length * 100) : 0;
-
-  const card = { background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: 12, padding: 20 };
-  const metricBox = { background: "var(--bg-input)", border: "1px solid var(--border)", borderRadius: 10, padding: "14px 16px", textAlign: "center" };
-  const metricVal = { fontSize: 26, fontWeight: 800, color: "var(--brand)", lineHeight: 1 };
-  const metricLbl = { fontSize: 11, color: "var(--text-secondary)", fontWeight: 500, marginTop: 4 };
-  const sectionTitle = { fontSize: 13, fontWeight: 700, color: "var(--text-secondary)", marginBottom: 12, textTransform: "uppercase", letterSpacing: "0.04em" };
-
-  return (
-    <div style={{ width: "100%" }}>
-      <div style={{ marginBottom: 24 }}>
-        <h2 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: "var(--brand)" }}>{"\u{1F4CA}"} Analytics Overview</h2>
-        <p style={{ margin: "4px 0 0", fontSize: 14, color: "var(--text-secondary)" }}>Performance metrics and insights across all tickets</p>
-      </div>
-
-      {/* Key metrics */}
-      <div className="hub-analytics-metrics" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(110px, 1fr))", gap: 10, marginBottom: 20 }}>
-        <div style={metricBox}><div style={metricVal}>{tickets.length}</div><div style={metricLbl}>Total Tickets</div></div>
-        <div style={metricBox}><div style={metricVal}>{activeTickets.length}</div><div style={metricLbl}>Active</div></div>
-        <div style={metricBox}><div style={metricVal}>{completedTickets.length}</div><div style={metricLbl}>Completed</div></div>
-        <div style={metricBox}><div style={metricVal}>{completionRate}%</div><div style={metricLbl}>Completion Rate</div></div>
-        <div style={metricBox}><div style={metricVal}>{avgText}</div><div style={metricLbl}>Avg. Turnaround</div></div>
-        <div style={{ ...metricBox, borderColor: overdueCount > 0 ? "rgba(220,38,38,0.3)" : "var(--border)" }}><div style={{ ...metricVal, color: overdueCount > 0 ? "#dc2626" : "var(--brand)" }}>{overdueCount}</div><div style={metricLbl}>Overdue</div></div>
-      </div>
-
-      {/* Week comparison */}
-      <div className="hub-week-compare" style={{ ...card, padding: "14px 20px", marginBottom: 20, display: "flex", gap: 24, justifyContent: "center", alignItems: "center", fontSize: 13, color: "var(--text-secondary)" }}>
-        <div style={{ textAlign: "center" }}>
-          <div style={{ fontSize: 11, fontWeight: 600, marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.04em" }}>Last Week</div>
-          <span><strong style={{ color: "var(--brand)", fontSize: 18 }}>{lastWeekCreated}</strong> in</span>
-          <span style={{ margin: "0 6px", opacity: 0.3 }}>|</span>
-          <span><strong style={{ color: "#16a34a", fontSize: 18 }}>{lastWeekCompleted}</strong> out</span>
-        </div>
-        <div style={{ width: 1, height: 32, background: "var(--border)" }}></div>
-        <div style={{ textAlign: "center" }}>
-          <div style={{ fontSize: 11, fontWeight: 600, marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.04em" }}>This Week</div>
-          <span><strong style={{ color: "var(--brand)", fontSize: 18 }}>{thisWeekCreated}</strong> in</span>
-          <span style={{ margin: "0 6px", opacity: 0.3 }}>|</span>
-          <span><strong style={{ color: "#16a34a", fontSize: 18 }}>{thisWeekCompleted}</strong> out</span>
-        </div>
-      </div>
-
-      {/* Monthly chart + status */}
-      <div className="hub-analytics-cols" style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 16, marginBottom: 20 }}>
-        <div style={card}>
-          <div style={sectionTitle}>Monthly Trend (Last 6 Months)</div>
-          <div style={{ display: "flex", alignItems: "flex-end", gap: 8, height: 120 }}>
-            {monthlyData.map((m, i) => (
-              <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 3 }}>
-                <div style={{ display: "flex", gap: 2, alignItems: "flex-end", width: "100%", justifyContent: "center", height: 90 }}>
-                  <div style={{ width: "40%", background: "var(--brand)", borderRadius: "3px 3px 0 0", height: (m.created / maxMonthly * 90) + "px", minHeight: m.created > 0 ? 4 : 0, transition: "height 0.5s", opacity: 0.7 }} title={m.created + " created"}></div>
-                  <div style={{ width: "40%", background: "#16a34a", borderRadius: "3px 3px 0 0", height: (m.completed / maxMonthly * 90) + "px", minHeight: m.completed > 0 ? 4 : 0, transition: "height 0.5s", opacity: 0.7 }} title={m.completed + " completed"}></div>
-                </div>
-                <span style={{ fontSize: 10, color: "var(--text-muted)", fontWeight: 600 }}>{m.label}</span>
-              </div>
-            ))}
-          </div>
-          <div style={{ display: "flex", gap: 16, justifyContent: "center", marginTop: 10, fontSize: 11, color: "var(--text-muted)" }}>
-            <span><span style={{ display: "inline-block", width: 8, height: 8, borderRadius: 2, background: "var(--brand)", marginRight: 4, opacity: 0.7 }}></span>Submitted</span>
-            <span><span style={{ display: "inline-block", width: 8, height: 8, borderRadius: 2, background: "#16a34a", marginRight: 4, opacity: 0.7 }}></span>Completed</span>
-          </div>
-        </div>
-
-        <div style={card}>
-          <div style={sectionTitle}>Status Breakdown</div>
-          {Object.entries(STATUS).map(([key, s]) => (
-            <div key={key} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 0", borderBottom: "1px solid var(--border)" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <span style={{ width: 10, height: 10, borderRadius: "50%", background: s.color }}></span>
-                <span style={{ fontSize: 13, fontWeight: 500, color: "var(--text-primary)" }}>{s.label}</span>
-              </div>
-              <span style={{ fontSize: 18, fontWeight: 800, color: s.color }}>{statusBreakdown[key]}</span>
-            </div>
-          ))}
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 0" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#d97706" }}></span>
-              <span style={{ fontSize: 13, fontWeight: 500, color: "var(--text-primary)" }}>Due Soon ({"\u2264"}3d)</span>
-            </div>
-            <span style={{ fontSize: 18, fontWeight: 800, color: "#d97706" }}>{dueSoon}</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Priority + turnaround + submitters */}
-      <div className="hub-analytics-cols" style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16, marginBottom: 20 }}>
-        <div style={card}>
-          <div style={sectionTitle}>Active by Priority</div>
-          {Object.entries(PRIORITIES).map(([key, p]) => (
-            <div key={key} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-              <span style={{ fontSize: 11, fontWeight: 600, color: p.color, width: 60, flexShrink: 0 }}>{p.icon} {p.label}</span>
-              <div style={{ flex: 1, height: 10, background: "var(--bar-bg)", borderRadius: 5, overflow: "hidden" }}>
-                <div style={{ width: (priorityBreakdown[key] / maxPriority * 100) + "%", height: "100%", background: p.color, borderRadius: 5, transition: "width 0.5s" }}></div>
-              </div>
-              <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text-body)", width: 24, textAlign: "right" }}>{priorityBreakdown[key]}</span>
-            </div>
-          ))}
-        </div>
-
-        <div style={card}>
-          <div style={sectionTitle}>Turnaround by Priority</div>
-          {Object.entries(PRIORITIES).map(([key, p]) => (
-            <div key={key} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "6px 0", borderBottom: "1px solid var(--border)" }}>
-              <span style={{ fontSize: 12, fontWeight: 600, color: p.color }}>{p.icon} {p.label}</span>
-              <span style={{ fontSize: 14, fontWeight: 700, color: "var(--text-primary)" }}>{priorityAvg[key]}</span>
-            </div>
-          ))}
-          <div style={{ marginTop: 10, padding: "6px 0", display: "flex", justifyContent: "space-between", fontSize: 11, color: "var(--text-muted)" }}>
-            <span>Fastest: <strong style={{ color: "#16a34a" }}>{fmtH(fastestH)}</strong></span>
-            <span>Slowest: <strong style={{ color: "#dc2626" }}>{fmtH(slowestH)}</strong></span>
-          </div>
-        </div>
-
-        <div style={card}>
-          <div style={sectionTitle}>Top Submitters</div>
-          {topSubmitters.length === 0 ? (
-            <p style={{ fontSize: 12, color: "var(--text-muted)", margin: 0 }}>No tickets yet</p>
-          ) : topSubmitters.map(([name, count]) => (
-            <div key={name} style={{ marginBottom: 6 }}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 3 }}>
-                <span style={{ fontSize: 12, color: "var(--text-body)", fontWeight: 500 }}>{name}</span>
-                <span style={{ fontSize: 11, fontWeight: 700, color: "var(--brand)" }}>{count}</span>
-              </div>
-              <div style={{ height: 4, background: "var(--bar-bg)", borderRadius: 2, overflow: "hidden" }}>
-                <div style={{ width: (count / maxSubmitter * 100) + "%", height: "100%", background: "var(--brand)", borderRadius: 2, opacity: 0.5, transition: "width 0.5s" }}></div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Recent completions */}
-      <div style={card}>
-        <div style={sectionTitle}>Recently Completed</div>
-        {completedTickets.length === 0 ? (
-          <p style={{ fontSize: 13, color: "var(--text-muted)", margin: 0 }}>No completed tickets yet</p>
-        ) : completedTickets.sort((a, b) => new Date(b.completedAt) - new Date(a.completedAt)).slice(0, 6).map((t) => {
-          const hours = (new Date(t.completedAt) - new Date(t.createdAt)) / 3600000;
-          const dur = hours < 24 ? Math.round(hours) + "h" : (hours / 24).toFixed(1) + "d";
-          const p = PRIORITIES[t.priority];
-          return (
-            <div key={t.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 0", borderBottom: "1px solid var(--border)" }}>
-              <span style={{ fontSize: 11, fontFamily: "monospace", fontWeight: 700, color: "var(--brand)", background: "var(--brand-light)", padding: "2px 6px", borderRadius: 4, flexShrink: 0 }}>{t.id}</span>
-              <span style={{ fontSize: 13, color: "var(--text-primary)", fontWeight: 500, flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{t.title}</span>
-              <span style={{ fontSize: 10, fontWeight: 700, color: p.color, flexShrink: 0 }}>{p.icon}</span>
-              <span style={{ fontSize: 11, color: "#16a34a", fontWeight: 600, flexShrink: 0 }}>{dur}</span>
-              <span style={{ fontSize: 11, color: "var(--text-muted)", flexShrink: 0 }}>{new Date(t.completedAt).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}</span>
-            </div>
-          );
-        })}
-      </div>
-    </div>
+  const filteredProducts = PRODUCTS.filter(
+    (p) => (!selectedCategory || p.category === selectedCategory) && selectedProducts.has(p.id)
   );
-}
 
-function Dashboard({ tickets, onStatusChange, onComplete, onAddNote, onDelete, onUpdatePriority, onUpdateDeadline, onReopen, onTogglePin }) {
-  const [filter, setFilter] = useState("active");
-  const [sortBy, setSortBy] = useState("priority");
-  const [search, setSearch] = useState("");
-  const [viewMode, setViewMode] = useState("list");
-  const priorityOrder = { critical: 0, high: 1, medium: 2, low: 3 };
-
-  const filtered = tickets.filter((t) => {
-    if (search.trim()) {
-      const q = search.trim().toLowerCase();
-      if (!t.id.toLowerCase().includes(q) && !t.name.toLowerCase().includes(q) && !t.title.toLowerCase().includes(q)) return false;
-    }
-    if (filter === "all") return true;
-    if (filter === "active") return t.status !== "completed";
-    return t.status === filter;
-  });
-
-  const sorted = [...filtered].sort((a, b) => {
-    // Pinned tickets always come first
-    if (a.pinned && !b.pinned) return -1;
-    if (!a.pinned && b.pinned) return 1;
-    const effectiveSort = viewMode === "grid" ? "deadline" : sortBy;
-    if (effectiveSort === "priority") return priorityOrder[a.priority] - priorityOrder[b.priority];
-    if (effectiveSort === "deadline") return (a.deadline || "9999") < (b.deadline || "9999") ? -1 : 1;
-    return new Date(b.createdAt) - new Date(a.createdAt);
-  });
-
-  const filterTabs = [
-    { key: "all", label: "All" }, { key: "active", label: "Active" }, { key: "open", label: "Open" },
-    { key: "in_progress", label: "In Progress" }, { key: "completed", label: "Completed" },
-  ];
-
-  return (
-    <div style={{ width: "100%" }}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20, flexWrap: "wrap", gap: 12 }}>
-        <div>
-          <h2 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: "var(--brand)" }}>Ticket Dashboard</h2>
-          <p style={{ margin: "4px 0 0", fontSize: 14, color: "var(--text-secondary)" }}>Manage and track all marketing requests</p>
-        </div>
-        <div style={{ position: "relative", minWidth: 200 }}>
-          <span style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)", fontSize: 14, pointerEvents: "none" }}>{"\u{1F50D}"}</span>
-          <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search ref, name, or title..." style={{ width: "100%", padding: "9px 12px 9px 34px", background: "var(--bg-input)", border: "1px solid var(--border)", borderRadius: 8, color: "var(--text-primary)", fontSize: 13, outline: "none", transition: "border 0.2s, box-shadow 0.2s" }} onFocus={(e) => { e.target.style.borderColor = "var(--brand)"; e.target.style.boxShadow = "0 0 0 3px var(--brand-glow)"; }} onBlur={(e) => { e.target.style.borderColor = "var(--border)"; e.target.style.boxShadow = "none"; }} />
-        </div>
-      </div>
-
-      <div style={{ marginBottom: 24 }}>
-        <StatsBar tickets={tickets} />
-      </div>
-
-      <div className="hub-filter-bar" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16, flexWrap: "wrap", gap: 10 }}>
-        <div style={{ display: "flex", gap: 4, background: "var(--bg-card)", borderRadius: 8, padding: 3, border: "1px solid var(--border)" }}>
-          {filterTabs.map((tab) => (
-            <button key={tab.key} onClick={() => setFilter(tab.key)} style={{ padding: "6px 14px", borderRadius: 6, fontSize: 13, fontWeight: 500, cursor: "pointer", border: "none", transition: "all 0.2s", background: filter === tab.key ? "var(--brand)" : "transparent", color: filter === tab.key ? "#fff" : "var(--text-secondary)" }}>
-              {tab.label}
-            </button>
-          ))}
-        </div>
-        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-          <div style={{ display: "flex", gap: 2, background: "var(--bg-card)", borderRadius: 6, padding: 2, border: "1px solid var(--border)" }}>
-            <button onClick={() => setViewMode("list")} title="List view" style={{ padding: "5px 8px", borderRadius: 4, border: "none", cursor: "pointer", background: viewMode === "list" ? "var(--brand)" : "transparent", color: viewMode === "list" ? "#fff" : "var(--text-muted)", fontSize: 14, lineHeight: 1, transition: "all 0.2s" }}>{"\u2630"}</button>
-            <button onClick={() => setViewMode("grid")} title="Grid view" style={{ padding: "5px 8px", borderRadius: 4, border: "none", cursor: "pointer", background: viewMode === "grid" ? "var(--brand)" : "transparent", color: viewMode === "grid" ? "#fff" : "var(--text-muted)", fontSize: 14, lineHeight: 1, transition: "all 0.2s" }}>{"\u25A6"}</button>
-          </div>
-          <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} style={{ padding: "6px 12px", background: "var(--bg-input)", border: "1px solid var(--border)", borderRadius: 8, color: "var(--brand)", fontSize: 13, cursor: "pointer", outline: "none" }}>
-            <option value="priority">Sort: Priority</option>
-            <option value="deadline">Sort: Deadline</option>
-            <option value="newest">Sort: Newest</option>
-          </select>
-        </div>
-      </div>
-
-      {sorted.length === 0 ? (
-        <div style={{ textAlign: "center", padding: "48px 20px", color: "var(--text-muted)" }}>
-          <div style={{ fontSize: 40, marginBottom: 12, opacity: 0.5 }}>{search.trim() ? "\u{1F50D}" : "\u{1F4CB}"}</div>
-          <p style={{ fontSize: 15, margin: 0 }}>{search.trim() ? 'No tickets matching "' + search.trim() + '"' : "No tickets found" + (filter !== "all" ? " for this filter" : "")}</p>
-        </div>
-      ) : viewMode === "list" ? (
-        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          {sorted.map((t) => <TicketCard key={t.id} ticket={t} onStatusChange={onStatusChange} onComplete={onComplete} onAddNote={onAddNote} onDelete={onDelete} onUpdatePriority={onUpdatePriority} onUpdateDeadline={onUpdateDeadline} onReopen={onReopen} onTogglePin={onTogglePin} />)}
-        </div>
-      ) : (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: 10 }}>
-          {sorted.map((t) => <GridCard key={t.id} ticket={t} onStatusChange={onStatusChange} onComplete={onComplete} onDelete={onDelete} onReopen={onReopen} onTogglePin={onTogglePin} />)}
-        </div>
-      )}
-    </div>
-  );
-}
-
-function SubmitterView({ tickets, submittedRef, onAddNote, onBackToForm }) {
-  const [trackRef, setTrackRef] = useState(submittedRef || "");
-  const [noteText, setNoteText] = useState("");
-  const [noteName, setNoteName] = useState("");
-
-  const ticket = tickets.find((t) => t.id.toLowerCase() === trackRef.trim().toLowerCase());
-
-  const submitNote = () => {
-    if (!noteText.trim() || !noteName.trim() || !ticket) return;
-    onAddNote(ticket.id, noteName.trim(), noteText.trim());
-    setNoteText("");
-    setNoteName("");
-  };
-
-  return (
-    <div style={{ maxWidth: 560, width: "100%" }}>
-      {submittedRef && (
-        <div style={{ background: "rgba(22,163,74,0.06)", border: "1px solid rgba(22,163,74,0.2)", borderRadius: 12, padding: 24, marginBottom: 20, textAlign: "center" }}>
-          <div style={{ width: 48, height: 48, borderRadius: 12, background: "rgba(22,163,74,0.12)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 12px", fontSize: 22 }}>{"\u2713"}</div>
-          <h2 style={{ margin: "0 0 6px", fontSize: 20, fontWeight: 700, color: "var(--brand)" }}>Ticket Submitted!</h2>
-          <p style={{ margin: "0 0 14px", fontSize: 14, color: "var(--text-secondary)" }}>Your reference number is:</p>
-          <div style={{ display: "inline-block", background: "var(--brand)", color: "#fff", padding: "10px 28px", borderRadius: 10, fontSize: 28, fontFamily: "monospace", fontWeight: 800, letterSpacing: "0.08em" }}>{submittedRef}</div>
-          <p style={{ margin: "14px 0 0", fontSize: 13, color: "var(--text-secondary)" }}>Keep this reference to track your ticket's progress below.</p>
-        </div>
-      )}
-
-      <div style={{ background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: 12, padding: 24, marginBottom: 16 }}>
-        <h3 style={{ margin: "0 0 12px", fontSize: 16, fontWeight: 700, color: "var(--brand)" }}>{submittedRef ? "Your Ticket" : "Track a Ticket"}</h3>
-        {!submittedRef && (
-          <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
-            <input value={trackRef} onChange={(e) => setTrackRef(e.target.value.toUpperCase())} placeholder="Enter ticket ref e.g. M001" style={{ flex: 1, padding: "10px 14px", background: "var(--bg-input)", border: "1px solid var(--border)", borderRadius: 8, color: "var(--text-primary)", fontSize: 14, fontFamily: "monospace", fontWeight: 600, outline: "none", letterSpacing: "0.04em" }} onFocus={(e) => { e.target.style.borderColor = "var(--brand)"; e.target.style.boxShadow = "0 0 0 3px var(--brand-glow)"; }} onBlur={(e) => { e.target.style.borderColor = "var(--border)"; e.target.style.boxShadow = "none"; }} />
-          </div>
-        )}
-
-        {trackRef.trim() && !ticket && (
-          <div style={{ textAlign: "center", padding: 20, color: "var(--text-muted)" }}>
-            <p style={{ fontSize: 14, margin: 0 }}>No ticket found with reference "{trackRef.trim()}"</p>
-          </div>
-        )}
-
-        {ticket && (() => {
-          const p = PRIORITIES[ticket.priority];
-          const s = STATUS[ticket.status];
-          const dueBadge = getDueBadge(ticket.deadline, ticket.status);
-          return (
-            <div>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10, flexWrap: "wrap" }}>
-                <span style={{ fontSize: 13, fontFamily: "monospace", color: "var(--brand)", fontWeight: 700, background: "var(--brand-light)", padding: "3px 9px", borderRadius: 5 }}>{ticket.id}</span>
-                <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 20, background: p.bg, color: p.color, border: "1px solid " + p.border }}>{p.icon} {p.label}</span>
-                <span style={{ fontSize: 11, fontWeight: 600, padding: "2px 8px", borderRadius: 20, background: s.bg, color: s.color }}>{s.label}</span>
-                {dueBadge && <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 20, background: dueBadge.bg, color: dueBadge.color, border: "1px solid " + dueBadge.border }}>{dueBadge.text}</span>}
-              </div>
-              <h4 style={{ margin: "0 0 6px", fontSize: 16, fontWeight: 600, color: "var(--brand)" }}>{ticket.title}</h4>
-              <div style={{ margin: "0 0 12px", fontSize: 14, color: "var(--text-body)", lineHeight: 1.6 }} dangerouslySetInnerHTML={{ __html: renderMarkdown(ticket.description) }}></div>
-              <div style={{ fontSize: 13, color: "var(--text-secondary)", display: "flex", gap: 14, flexWrap: "wrap", marginBottom: 16 }}>
-                <span>{"\u{1F464}"} {ticket.name}</span>
-                <span>{"\u{1F4C5}"} {formatDate(ticket.deadline)}</span>
-                <span style={{ opacity: 0.6 }}>Created {new Date(ticket.createdAt).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}</span>
-                {ticket.completedAt && <span style={{ color: "#16a34a" }}>{"\u2713"} Completed {new Date(ticket.completedAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}</span>}
-              </div>
-
-              {/* Status timeline */}
-              <div style={{ display: "flex", gap: 0, marginBottom: 16 }}>
-                {[
-                  { key: "open", label: "Submitted", icon: "\u{1F4E5}" },
-                  { key: "in_progress", label: "In Progress", icon: "\u{1F528}" },
-                  { key: "completed", label: "Completed", icon: "\u2713" },
-                ].map((step, idx) => {
-                  const statusOrder = { open: 0, in_progress: 1, completed: 2 };
-                  const current = statusOrder[ticket.status];
-                  const active = idx <= current;
-                  return (
-                    <div key={step.key} style={{ flex: 1, textAlign: "center", position: "relative" }}>
-                      <div style={{ width: 32, height: 32, borderRadius: "50%", background: active ? "var(--brand)" : "var(--bar-bg)", color: active ? "#fff" : "var(--text-muted)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 6px", fontSize: 14, fontWeight: 700, transition: "all 0.3s" }}>{step.icon}</div>
-                      <div style={{ fontSize: 11, fontWeight: 600, color: active ? "var(--brand)" : "var(--text-muted)" }}>{step.label}</div>
-                      {idx < 2 && <div style={{ position: "absolute", top: 15, left: "60%", right: "-40%", height: 2, background: idx < current ? "var(--brand)" : "var(--bar-bg)", zIndex: -1 }}></div>}
-                    </div>
-                  );
-                })}
-              </div>
-
-              {/* Notes */}
-              {ticket.notes && ticket.notes.length > 0 && (
-                <div style={{ marginBottom: 14 }}>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: "var(--brand)", marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.05em" }}>Updates & Notes</div>
-                  {ticket.notes.map((note, i) => (
-                    <div key={i} style={{ background: note.auto ? "var(--brand-light)" : "var(--bg-input)", border: "1px solid " + (note.auto ? "rgba(35,29,104,0.1)" : "var(--border)"), borderRadius: 8, padding: "10px 14px", marginBottom: 6 }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-                        <span style={{ fontSize: 12, fontWeight: 700, color: note.auto ? "#6366f1" : "var(--brand)" }}>{note.author}</span>
-                        <span style={{ fontSize: 11, color: "var(--text-muted)" }}>{new Date(note.timestamp).toLocaleDateString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</span>
-                      </div>
-                      <p style={{ margin: 0, fontSize: 13, color: "var(--text-body)", lineHeight: 1.5, fontStyle: note.auto ? "italic" : "normal" }}>{note.text}</p>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {/* Add note */}
-              <div style={{ display: "flex", gap: 8 }}>
-                <input value={noteName} onChange={(e) => setNoteName(e.target.value)} placeholder="Your name" style={{ width: 130, padding: "8px 12px", background: "var(--bg-input)", border: "1px solid var(--border)", borderRadius: 8, color: "var(--text-primary)", fontSize: 13, outline: "none", flexShrink: 0 }} onFocus={(e) => { e.target.style.borderColor = "var(--brand)"; e.target.style.boxShadow = "0 0 0 3px var(--brand-glow)"; }} onBlur={(e) => { e.target.style.borderColor = "var(--border)"; e.target.style.boxShadow = "none"; }} />
-                <input value={noteText} onChange={(e) => setNoteText(e.target.value)} placeholder="Add a note..." onKeyDown={(e) => { if (e.key === "Enter") submitNote(); }} style={{ flex: 1, padding: "8px 12px", background: "var(--bg-input)", border: "1px solid var(--border)", borderRadius: 8, color: "var(--text-primary)", fontSize: 13, outline: "none" }} onFocus={(e) => { e.target.style.borderColor = "var(--brand)"; e.target.style.boxShadow = "0 0 0 3px var(--brand-glow)"; }} onBlur={(e) => { e.target.style.borderColor = "var(--border)"; e.target.style.boxShadow = "none"; }} />
-                <button onClick={submitNote} style={{ padding: "8px 14px", background: "var(--brand)", border: "none", borderRadius: 8, color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap" }} onMouseOver={(e) => e.target.style.background = "var(--brand)"} onMouseOut={(e) => e.target.style.background = "var(--brand)"}>+ Add</button>
-              </div>
-            </div>
-          );
-        })()}
-      </div>
-
-      <button onClick={onBackToForm} style={{ width: "100%", padding: "11px 24px", background: "var(--brand)", border: "none", borderRadius: 8, color: "#fff", fontSize: 14, fontWeight: 700, cursor: "pointer", transition: "all 0.2s" }} onMouseOver={(e) => e.target.style.background = "var(--brand)"} onMouseOut={(e) => e.target.style.background = "var(--brand)"}>
-        {"\u2190"} Submit Another Ticket
-      </button>
-    </div>
-  );
-}
-
-
-function MarketingArchive({ entries, isAdmin, onManage }) {
-  const [filter, setFilter] = useState("all");
-  const [search, setSearch] = useState("");
-  const [viewMode, setViewMode] = useState("list");
-
-  const filtered = entries.filter((e) => {
-    if (filter !== "all" && e.type !== filter) return false;
-    if (search.trim()) {
-      const q = search.toLowerCase();
-      return e.title.toLowerCase().includes(q) || (e.description || "").toLowerCase().includes(q) || (e.tags || []).some((tag) => tag.toLowerCase().includes(q));
-    }
-    return true;
-  });
-
-  const sorted = [...filtered].sort((a, b) => new Date(b.date || b.created_at) - new Date(a.date || a.created_at));
-
-  return (
-    <div style={{ width: "100%" }}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20, flexWrap: "wrap", gap: 10 }}>
-        <div>
-          <h2 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: "var(--brand)" }}>{"\u{1F4DA}"} Marketing Archive</h2>
-          <p style={{ margin: "4px 0 0", fontSize: 14, color: "var(--text-secondary)" }}>{entries.length} item{entries.length !== 1 ? "s" : ""} in the archive</p>
-        </div>
-        {isAdmin && <button onClick={() => onManage()} style={{ padding: "9px 18px", background: "var(--brand)", border: "none", borderRadius: 8, color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer", transition: "all 0.2s" }}>+ Add Entry</button>}
-      </div>
-
-      <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap", alignItems: "center" }}>
-        <div style={{ position: "relative", flex: 1, minWidth: 180 }}>
-          <span style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)", fontSize: 14, pointerEvents: "none" }}>{"\u{1F50D}"}</span>
-          <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search archive..." style={{ width: "100%", padding: "9px 12px 9px 34px", background: "var(--bg-input)", border: "1px solid var(--border)", borderRadius: 8, color: "var(--text-primary)", fontSize: 13, outline: "none" }} />
-        </div>
-        <div className="hub-archive-types" style={{ display: "flex", gap: 3, background: "var(--bg-card)", borderRadius: 8, padding: 3, border: "1px solid var(--border)", flexWrap: "wrap" }}>
-          <button onClick={() => setFilter("all")} style={{ padding: "5px 12px", borderRadius: 6, fontSize: 12, fontWeight: 500, cursor: "pointer", border: "none", background: filter === "all" ? "var(--brand)" : "transparent", color: filter === "all" ? "#fff" : "var(--text-secondary)" }}>All</button>
-          {Object.entries(ARCHIVE_TYPES).map(([key, t]) => (
-            <button key={key} onClick={() => setFilter(key)} style={{ padding: "5px 12px", borderRadius: 6, fontSize: 12, fontWeight: 500, cursor: "pointer", border: "none", background: filter === key ? t.color : "transparent", color: filter === key ? "#fff" : "var(--text-secondary)" }}>{t.icon} {t.label}</button>
-          ))}
-        </div>
-        <div style={{ display: "flex", gap: 2, background: "var(--bg-card)", borderRadius: 6, padding: 2, border: "1px solid var(--border)" }}>
-          <button onClick={() => setViewMode("list")} style={{ padding: "5px 8px", borderRadius: 4, border: "none", cursor: "pointer", background: viewMode === "list" ? "var(--brand)" : "transparent", color: viewMode === "list" ? "#fff" : "var(--text-muted)", fontSize: 14, lineHeight: 1 }}>{"\u2630"}</button>
-          <button onClick={() => setViewMode("grid")} style={{ padding: "5px 8px", borderRadius: 4, border: "none", cursor: "pointer", background: viewMode === "grid" ? "var(--brand)" : "transparent", color: viewMode === "grid" ? "#fff" : "var(--text-muted)", fontSize: 14, lineHeight: 1 }}>{"\u25A6"}</button>
-        </div>
-      </div>
-
-      {sorted.length === 0 ? (
-        <div style={{ textAlign: "center", padding: "48px 20px", color: "var(--text-muted)" }}>
-          <div style={{ fontSize: 40, marginBottom: 12, opacity: 0.5 }}>{search.trim() ? "\u{1F50D}" : "\u{1F4DA}"}</div>
-          <p style={{ fontSize: 15, margin: 0 }}>{search.trim() ? 'No items matching "' + search.trim() + '"' : "No archive entries yet"}</p>
-        </div>
-      ) : viewMode === "list" ? (
-        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          {sorted.map((entry) => {
-            const t = ARCHIVE_TYPES[entry.type] || ARCHIVE_TYPES.other;
-            return (
-              <div key={entry.id} style={{ background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: 10, padding: "14px 18px", display: "flex", alignItems: "center", gap: 14, transition: "all 0.2s" }} onMouseOver={(e) => { e.currentTarget.style.boxShadow = "var(--shadow-hover)"; e.currentTarget.style.transform = "translateY(-1px)"; }} onMouseOut={(e) => { e.currentTarget.style.boxShadow = "none"; e.currentTarget.style.transform = "none"; }}>
-                <div style={{ width: 42, height: 42, borderRadius: 10, background: t.color + "15", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, flexShrink: 0 }}>{t.icon}</div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 14, fontWeight: 600, color: "var(--text-primary)", marginBottom: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{entry.title}</div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: "var(--text-muted)", flexWrap: "wrap" }}>
-                    <span style={{ fontWeight: 600, color: t.color }}>{t.label}</span>
-                    <span>{new Date(entry.date || entry.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}</span>
-                    {entry.tags && entry.tags.length > 0 && entry.tags.map((tag) => <span key={tag} style={{ padding: "1px 6px", borderRadius: 4, background: "var(--brand-light)", color: "var(--brand)", fontSize: 10, fontWeight: 600 }}>{tag}</span>)}
-                  </div>
-                </div>
-                {entry.link && <a href={entry.link} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} style={{ padding: "6px 12px", background: "var(--brand-light)", border: "none", borderRadius: 6, color: "var(--brand)", fontSize: 12, fontWeight: 600, textDecoration: "none", flexShrink: 0, transition: "all 0.2s" }}>{"\u2197"} View</a>}
-                {isAdmin && <button onClick={() => onManage(entry.id)} style={{ padding: "6px 10px", background: "transparent", border: "1px solid var(--border)", borderRadius: 6, color: "var(--text-muted)", fontSize: 11, cursor: "pointer" }}>{"\u270E"}</button>}
-              </div>
-            );
-          })}
-        </div>
-      ) : (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 12 }}>
-          {sorted.map((entry) => {
-            const t = ARCHIVE_TYPES[entry.type] || ARCHIVE_TYPES.other;
-            return (
-              <div key={entry.id} style={{ background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: 10, padding: 16, transition: "all 0.2s", display: "flex", flexDirection: "column", gap: 10 }} onMouseOver={(e) => { e.currentTarget.style.boxShadow = "var(--shadow-hover)"; e.currentTarget.style.transform = "translateY(-2px)"; }} onMouseOut={(e) => { e.currentTarget.style.boxShadow = "none"; e.currentTarget.style.transform = "none"; }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <span style={{ fontSize: 22 }}>{t.icon}</span>
-                  <span style={{ fontSize: 11, fontWeight: 600, color: t.color }}>{t.label}</span>
-                  {isAdmin && <button onClick={() => onManage(entry.id)} style={{ marginLeft: "auto", padding: "3px 7px", background: "transparent", border: "1px solid var(--border)", borderRadius: 4, color: "var(--text-muted)", fontSize: 10, cursor: "pointer" }}>{"\u270E"}</button>}
-                </div>
-                <div style={{ fontSize: 14, fontWeight: 600, color: "var(--text-primary)", lineHeight: 1.3, overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>{entry.title}</div>
-                {entry.description && <div style={{ fontSize: 12, color: "var(--text-secondary)", lineHeight: 1.5, overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>{entry.description}</div>}
-                <div style={{ marginTop: "auto", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                  <span style={{ fontSize: 11, color: "var(--text-muted)" }}>{new Date(entry.date || entry.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}</span>
-                  {entry.link && <a href={entry.link} target="_blank" rel="noopener noreferrer" style={{ fontSize: 11, fontWeight: 600, color: "var(--brand)", textDecoration: "none" }}>{"\u2197"} View</a>}
-                </div>
-                {entry.tags && entry.tags.length > 0 && (
-                  <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
-                    {entry.tags.map((tag) => <span key={tag} style={{ padding: "1px 6px", borderRadius: 4, background: "var(--brand-light)", color: "var(--brand)", fontSize: 10, fontWeight: 600 }}>{tag}</span>)}
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      )}
-    </div>
-  );
-}
-
-function ArchiveForm({ entry, onSave, onCancel, onDelete }) {
-  const [form, setForm] = useState(entry ? { title: entry.title, type: entry.type, description: entry.description || "", date: entry.date || "", link: entry.link || "", tags: (entry.tags || []).join(", ") } : { title: "", type: "email", description: "", date: new Date().toISOString().split("T")[0], link: "", tags: "" });
-  const [saving, setSaving] = useState(false);
-  const [confirmDel, setConfirmDel] = useState(false);
-
-  const handleSave = async () => {
-    if (!form.title.trim()) return;
-    setSaving(true);
-    await onSave({
-      title: form.title.trim(),
-      type: form.type,
-      description: form.description.trim(),
-      date: form.date || null,
-      link: form.link.trim() || null,
-      tags: form.tags.split(",").map((t) => t.trim()).filter(Boolean),
+  const toggleProduct = (id) => {
+    setSelectedProducts((prev) => {
+      const n = new Set(prev);
+      if (n.has(id)) n.delete(id); else n.add(id);
+      return n;
     });
-    setSaving(false);
   };
 
-  const inputStyle = { width: "100%", padding: "11px 14px", background: "var(--bg-input)", border: "1px solid var(--border)", borderRadius: 8, color: "var(--text-primary)", fontSize: 14, outline: "none", boxSizing: "border-box" };
-  const labelStyle = { display: "block", fontSize: 13, fontWeight: 600, color: "var(--brand)", marginBottom: 6, letterSpacing: "0.02em" };
+  const handlePrint = useCallback(() => {
+    const printWindow = window.open("", "_blank");
+    if (!printWindow) return;
+    const content = printRef.current?.innerHTML || "";
+    printWindow.document.write(`
+      <!DOCTYPE html><html><head>
+        <title>${config.brokerName} - Product Sheets</title>
+        <style>
+          * { margin: 0; padding: 0; box-sizing: border-box; }
+          body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: #fff; }
+          @media print { body { background: #fff; } @page { margin: 0.5cm; size: A4; } }
+        </style>
+      </head><body>${content}</body></html>
+    `);
+    printWindow.document.close();
+    setTimeout(() => printWindow.print(), 500);
+  }, [config.brokerName]);
 
-  return (
-    <div style={{ maxWidth: 560, width: "100%" }}>
-      <div style={{ background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: 16, padding: 28 }}>
-        <h2 style={{ margin: "0 0 20px", fontSize: 20, fontWeight: 700, color: "var(--brand)" }}>{entry ? "\u270E Edit Archive Entry" : "\u{1F4DA} Add to Archive"}</h2>
-
-        <div style={{ marginBottom: 16 }}>
-          <label style={labelStyle}>Title *</label>
-          <input style={inputStyle} value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="e.g. March Newsletter - Spring Products" />
-        </div>
-
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 16 }}>
-          <div>
-            <label style={labelStyle}>Type</label>
-            <select value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })} style={{ ...inputStyle, cursor: "pointer" }}>
-              {Object.entries(ARCHIVE_TYPES).map(([key, t]) => <option key={key} value={key}>{t.icon} {t.label}</option>)}
-            </select>
+  if (view === "setup") {
+    return (
+      <div style={{ minHeight: "100vh", background: "#f1f5f9", fontFamily: FONT }}>
+        <TopNav title="Product Sheet Generator" />
+        <div style={{ padding: "36px 20px" }}>
+          <div style={{ textAlign: "center", marginBottom: 24 }}>
+            <img src={ALPS_LOGO} alt="Alps" style={{ height: 40, objectFit: "contain", marginBottom: 8 }} />
+            <p style={{ fontSize: 13, color: "#94a3b8" }}>
+              Insurance Product Sheets — Customised to Your Brand
+            </p>
           </div>
-          <div>
-            <label style={labelStyle}>Date</label>
-            <input type="date" style={{ ...inputStyle, cursor: "pointer" }} value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} />
+          <PSGConfigPanel config={config} setConfig={setConfig} onGenerate={() => setView("preview")} />
+          <div style={{ textAlign: "center", marginTop: 24 }}>
+            <p style={{ fontSize: 11, color: "#94a3b8" }}>Powered by Alps — The Leading Add-On Providers</p>
+            <p style={{ fontSize: 10, color: "#b0b8c4", marginTop: 6 }}>
+              If you experience any problems, or require any assistance, please get in touch with marketing at{" "}
+              <a href="mailto:tom.thomas@alpsltd.co.uk" style={{ color: "#64748b" }}>tom.thomas@alpsltd.co.uk</a>
+            </p>
+            <p style={{ fontSize: 9, color: "#cbd5e1", marginTop: 4 }}>v2.0</p>
           </div>
-        </div>
-
-        <div style={{ marginBottom: 16 }}>
-          <label style={labelStyle}>Description</label>
-          <textarea rows={3} style={{ ...inputStyle, resize: "vertical", fontFamily: "inherit" }} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="Brief summary of the campaign or material..." />
-        </div>
-
-        <div style={{ marginBottom: 16 }}>
-          <label style={labelStyle}>Link / URL</label>
-          <input style={inputStyle} value={form.link} onChange={(e) => setForm({ ...form, link: e.target.value })} placeholder="https://..." />
-        </div>
-
-        <div style={{ marginBottom: 24 }}>
-          <label style={labelStyle}>Tags <span style={{ fontWeight: 400, opacity: 0.6 }}>(comma separated)</span></label>
-          <input style={inputStyle} value={form.tags} onChange={(e) => setForm({ ...form, tags: e.target.value })} placeholder="e.g. Q1, product launch, broker name" />
-        </div>
-
-        <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-          <button onClick={handleSave} disabled={saving || !form.title.trim()} style={{ flex: 1, padding: "12px", background: "var(--brand)", border: "none", borderRadius: 8, color: "#fff", fontSize: 14, fontWeight: 700, cursor: saving ? "wait" : "pointer", opacity: !form.title.trim() ? 0.5 : 1 }}>
-            {saving ? "Saving..." : entry ? "Update Entry" : "Add to Archive"}
-          </button>
-          <button onClick={onCancel} style={{ padding: "12px 20px", background: "transparent", border: "1px solid var(--border)", borderRadius: 8, color: "var(--text-secondary)", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>Cancel</button>
-          {entry && onDelete && (
-            confirmDel ? (
-              <button onClick={() => onDelete(entry.id)} style={{ padding: "12px 16px", background: "#dc2626", border: "none", borderRadius: 8, color: "#fff", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>Confirm Delete</button>
-            ) : (
-              <button onClick={() => setConfirmDel(true)} style={{ padding: "12px 16px", background: "rgba(220,38,38,0.08)", border: "1px solid rgba(220,38,38,0.2)", borderRadius: 8, color: "#dc2626", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>Delete</button>
-            )
-          )}
         </div>
       </div>
-    </div>
-  );
-}
-
-function ActivityLog({ tickets }) {
-  // Build activity entries from ticket data
-  const activities = [];
-
-  tickets.forEach((t) => {
-    // Ticket created
-    activities.push({
-      time: t.createdAt,
-      type: "created",
-      icon: "\u{1F4E5}",
-      color: "#6366f1",
-      ref: t.id,
-      title: t.title,
-      text: t.name + " submitted a new ticket",
-    });
-
-    // Ticket completed
-    if (t.completedAt) {
-      activities.push({
-        time: t.completedAt,
-        type: "completed",
-        icon: "\u2713",
-        color: "#16a34a",
-        ref: t.id,
-        title: t.title,
-        text: "Ticket marked as completed",
-      });
-    }
-
-    // Notes (both manual and system)
-    (t.notes || []).forEach((note) => {
-      activities.push({
-        time: note.timestamp,
-        type: note.auto ? "system" : "note",
-        icon: note.auto ? "\u2699" : "\u{1F4DD}",
-        color: note.auto ? "#8b5cf6" : "#0284c7",
-        ref: t.id,
-        title: t.title,
-        text: note.auto ? note.text : note.author + ": " + note.text,
-      });
-    });
-  });
-
-  // Sort newest first
-  activities.sort((a, b) => new Date(b.time) - new Date(a.time));
-
-  const formatTime = (iso) => {
-    const d = new Date(iso);
-    const now = new Date();
-    const diffMs = now - d;
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHrs = Math.floor(diffMs / 3600000);
-    const diffDays = Math.floor(diffMs / 86400000);
-    if (diffMins < 1) return "Just now";
-    if (diffMins < 60) return diffMins + "m ago";
-    if (diffHrs < 24) return diffHrs + "h ago";
-    if (diffDays < 7) return diffDays + "d ago";
-    return d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: d.getFullYear() !== now.getFullYear() ? "numeric" : undefined });
-  };
-
-  return (
-    <div style={{ width: "100%" }}>
-      <div style={{ marginBottom: 20 }}>
-        <h2 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: "var(--brand)" }}>Activity Log</h2>
-        <p style={{ margin: "4px 0 0", fontSize: 14, color: "var(--text-secondary)" }}>Recent actions across all tickets</p>
-      </div>
-
-      {activities.length === 0 ? (
-        <div style={{ textAlign: "center", padding: "48px 20px", color: "var(--text-muted)" }}>
-          <div style={{ fontSize: 40, marginBottom: 12, opacity: 0.5 }}>{"\u{1F4CB}"}</div>
-          <p style={{ fontSize: 15, margin: 0 }}>No activity yet</p>
-        </div>
-      ) : (
-        <div style={{ position: "relative", paddingLeft: 28 }}>
-          {/* Vertical line */}
-          <div style={{ position: "absolute", left: 9, top: 6, bottom: 6, width: 2, background: "var(--bar-bg)", borderRadius: 1 }}></div>
-
-          {activities.slice(0, 50).map((a, i) => (
-            <div key={i} style={{ position: "relative", marginBottom: 16, paddingBottom: 0 }}>
-              {/* Dot */}
-              <div style={{ position: "absolute", left: -23, top: 4, width: 14, height: 14, borderRadius: "50%", background: "var(--bg-input)", border: "2.5px solid " + a.color, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 7 }}></div>
-
-              <div style={{ background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: 10, padding: "12px 16px", transition: "all 0.15s" }} onMouseOver={(e) => { e.currentTarget.style.boxShadow = "0 2px 8px rgba(35,29,104,0.06)"; }} onMouseOut={(e) => { e.currentTarget.style.boxShadow = "none"; }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4, flexWrap: "wrap" }}>
-                  <span style={{ fontSize: 14 }}>{a.icon}</span>
-                  <span style={{ fontSize: 11, fontFamily: "monospace", color: "var(--brand)", fontWeight: 700, background: "var(--brand-light)", padding: "1px 6px", borderRadius: 3 }}>{a.ref}</span>
-                  <span style={{ fontSize: 12, color: "var(--text-muted)" }}>{formatTime(a.time)}</span>
-                </div>
-                <p style={{ margin: 0, fontSize: 13, color: "var(--text-body)", lineHeight: 1.4 }}>{a.text}</p>
-                <p style={{ margin: "4px 0 0", fontSize: 12, color: "var(--text-muted)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{a.title}</p>
-              </div>
-            </div>
-          ))}
-
-          {activities.length > 50 && (
-            <p style={{ fontSize: 13, color: "var(--text-muted)", textAlign: "center", marginTop: 8 }}>Showing 50 of {activities.length} activities</p>
-          )}
-        </div>
-      )}
-    </div>
-  );
-}
-
-export default function App() {
-  const [view, setView] = useState("hub");
-  const [tickets, setTickets] = useState([]);
-  const [dashUnlocked, setDashUnlocked] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [lastSubmittedRef, setLastSubmittedRef] = useState(null);
-  const [archiveEntries, setArchiveEntries] = useState([]);
-  const [editArchiveEntry, setEditArchiveEntry] = useState(null);
-  const [dark, setDark] = useState(() => window.matchMedia?.("(prefers-color-scheme: dark)").matches || false);
-
-  // Request notification permission on mount
-  useEffect(() => {
-    if ("Notification" in window && Notification.permission === "default") {
-      Notification.requestPermission();
-    }
-  }, []);
-
-  // Load tickets from Supabase and subscribe to real-time changes
-  useEffect(() => {
-    async function fetchTickets() {
-      const { data } = await supabase.from("tickets").select("*").order("created_at", { ascending: false });
-      if (data) setTickets(data.map(mapRow));
-      setLoading(false);
-    }
-    fetchTickets();
-
-    const channel = supabase.channel("tickets-realtime")
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "tickets" }, (payload) => {
-        fetchTickets();
-        if ("Notification" in window && Notification.permission === "granted" && payload.new) {
-          const t = payload.new;
-          const p = PRIORITIES[t.priority];
-          new Notification("New Ticket: " + t.ref, {
-            body: (p ? p.icon + " " + p.label + " — " : "") + t.title + "\nFrom: " + t.name,
-            icon: "/alps-logo.webp",
-          });
-        }
-      })
-      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "tickets" }, () => {
-        fetchTickets();
-      })
-      .on("postgres_changes", { event: "DELETE", schema: "public", table: "tickets" }, () => {
-        fetchTickets();
-      })
-      .subscribe();
-
-    return () => { supabase.removeChannel(channel); };
-  }, []);
-
-
-  // Load archive entries from Supabase
-  useEffect(() => {
-    async function fetchArchive() {
-      const { data } = await supabase.from("archive_entries").select("*").order("date", { ascending: false });
-      if (data) setArchiveEntries(data);
-    }
-    fetchArchive();
-    const channel = supabase.channel("archive-realtime")
-      .on("postgres_changes", { event: "*", schema: "public", table: "archive_entries" }, () => { fetchArchive(); })
-      .subscribe();
-    return () => { supabase.removeChannel(channel); };
-  }, []);
-
-  function mapRow(row) {
-    // Handle both old format (["filename.pdf"]) and new format ([{name, url}])
-    const rawFiles = row.file_names || [];
-    const files = rawFiles.map((f) => typeof f === "string" ? { name: f, url: null } : f);
-    return {
-      id: row.ref,
-      dbId: row.id,
-      name: row.name,
-      title: row.title,
-      description: row.description,
-      priority: row.priority,
-      deadline: row.deadline || "",
-      status: row.status,
-      createdAt: row.created_at,
-      completedAt: row.completed_at || null,
-      pinned: row.pinned || false,
-      files,
-      notes: row.notes || [],
-    };
+    );
   }
 
-  const handleSubmit = async (formData) => {
-    const ref = await getNextRef();
-
-    // Upload files to Supabase Storage
-    const uploadedFiles = [];
-    if (formData.actualFiles && formData.actualFiles.length > 0) {
-      for (const file of formData.actualFiles) {
-        const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
-        const path = ref + "/" + Date.now() + "_" + safeName;
-        const { error: uploadError } = await supabase.storage.from("ticket-attachments").upload(path, file);
-        if (!uploadError) {
-          const { data: urlData } = supabase.storage.from("ticket-attachments").getPublicUrl(path);
-          uploadedFiles.push({ name: file.name, url: urlData.publicUrl });
-        }
-      }
-    }
-
-    const { error } = await supabase.from("tickets").insert({
-      ref,
-      name: formData.name,
-      title: formData.title,
-      description: formData.description,
-      priority: formData.priority,
-      deadline: formData.deadline || null,
-      status: "open",
-      file_names: uploadedFiles,
-      notes: [],
-    });
-    if (!error) {
-      setLastSubmittedRef(ref);
-      setView("submitted");
-    }
-  };
-
-  const handleStatusChange = async (id, status) => {
-    const ticket = tickets.find((t) => t.id === id);
-    if (ticket) {
-      await supabase.from("tickets").update({ status }).eq("id", ticket.dbId);
-    }
-  };
-
-  const handleComplete = async (id) => {
-    const ticket = tickets.find((t) => t.id === id);
-    if (ticket) {
-      await supabase.from("tickets").update({ status: "completed", completed_at: new Date().toISOString() }).eq("id", ticket.dbId);
-    }
-  };
-
-  const handleReopen = async (id) => {
-    const ticket = tickets.find((t) => t.id === id);
-    if (ticket) {
-      const autoNote = { author: "System", text: "Ticket reopened", timestamp: new Date().toISOString(), auto: true };
-      const newNotes = [...(ticket.notes || []), autoNote];
-      await supabase.from("tickets").update({ status: "open", completed_at: null, notes: newNotes }).eq("id", ticket.dbId);
-    }
-  };
-
-  const handleTogglePin = async (id) => {
-    const ticket = tickets.find((t) => t.id === id);
-    if (ticket) {
-      await supabase.from("tickets").update({ pinned: !ticket.pinned }).eq("id", ticket.dbId);
-    }
-  };
-
-  const handleDelete = async (id) => {
-    const ticket = tickets.find((t) => t.id === id);
-    if (ticket) {
-      await supabase.from("tickets").delete().eq("id", ticket.dbId);
-    }
-  };
-
-  const handleAddNote = async (id, author, text) => {
-    const ticket = tickets.find((t) => t.id === id);
-    if (ticket) {
-      const newNotes = [...(ticket.notes || []), { author, text, timestamp: new Date().toISOString() }];
-      await supabase.from("tickets").update({ notes: newNotes }).eq("id", ticket.dbId);
-    }
-  };
-
-  const handleUpdatePriority = async (id, newPriority) => {
-    const ticket = tickets.find((t) => t.id === id);
-    if (ticket) {
-      const oldLabel = PRIORITIES[ticket.priority]?.label || ticket.priority;
-      const newLabel = PRIORITIES[newPriority]?.label || newPriority;
-      const autoNote = { author: "System", text: "Priority changed from " + oldLabel + " to " + newLabel, timestamp: new Date().toISOString(), auto: true };
-      const newNotes = [...(ticket.notes || []), autoNote];
-      await supabase.from("tickets").update({ priority: newPriority, notes: newNotes }).eq("id", ticket.dbId);
-    }
-  };
-
-  const handleUpdateDeadline = async (id, newDeadline) => {
-    const ticket = tickets.find((t) => t.id === id);
-    if (ticket) {
-      const oldDate = ticket.deadline ? formatDate(ticket.deadline) : "No deadline";
-      const newDate = newDeadline ? formatDate(newDeadline) : "No deadline";
-      const autoNote = { author: "System", text: "Deadline changed from " + oldDate + " to " + newDate, timestamp: new Date().toISOString(), auto: true };
-      const newNotes = [...(ticket.notes || []), autoNote];
-      await supabase.from("tickets").update({ deadline: newDeadline || null, notes: newNotes }).eq("id", ticket.dbId);
-    }
-  };
-
-
-  const handleArchiveSave = async (data) => {
-    if (editArchiveEntry && editArchiveEntry !== "new") {
-      await supabase.from("archive_entries").update(data).eq("id", editArchiveEntry);
-    } else {
-      await supabase.from("archive_entries").insert(data);
-    }
-    setEditArchiveEntry(null);
-    setView("archive");
-  };
-
-  const handleArchiveDelete = async (id) => {
-    await supabase.from("archive_entries").delete().eq("id", id);
-    setEditArchiveEntry(null);
-    setView("archive");
-  };
-
-  const handleDashboardClick = () => {
-    if (dashUnlocked) {
-      setView("dashboard");
-    } else {
-      setView("password");
-    }
-  };
-
-  const handleUnlock = () => {
-    setDashUnlocked(true);
-    setView("dashboard");
-  };
-
-  const ticketViews = ["form", "submitted", "tracker", "dashboard", "password", "activity", "analytics"];
-  const archiveViews = ["archive", "archive_add", "archive_edit"];
-  const activeCount = tickets.filter((t) => t.status !== "completed").length;
-  const currentSection = view === "hub" ? "hub" : ticketViews.includes(view) ? "tickets" : archiveViews.includes(view) ? "archive" : "hub";
-
   return (
-    <div data-theme={dark ? "dark" : "light"} style={{ minHeight: "100vh", background: "var(--bg-page)", fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", color: "var(--text-primary)", transition: "background 0.3s, color 0.3s" }}>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
-        * { box-sizing: border-box; }
-        ::selection { background: #231d68; color: white; }
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: rgba(35,29,104,0.15); border-radius: 3px; }
-        @keyframes shakeAnim { 0%,100% { transform: translateX(0); } 20%,60% { transform: translateX(-8px); } 40%,80% { transform: translateX(8px); } }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        [data-theme="light"] {
-          --bg-page: #ffffff; --bg-card: #f6f6f6; --bg-input: #ffffff; --bg-header: #ffffff;
-          --bg-completed: #fafafa; --bg-hover: #f8fafc;
-          --border: #e2e8f0; --border-light: #f1f5f9;
-          --text-primary: #1e293b; --text-body: #475569; --text-secondary: #64748b; --text-muted: #94a3b8;
-          --brand: #231d68; --brand-light: rgba(35,29,104,0.07); --brand-glow: rgba(35,29,104,0.1);
-          --shadow: 0 1px 3px rgba(0,0,0,0.04); --shadow-hover: 0 2px 12px rgba(35,29,104,0.08);
-          --nav-bg: #f6f6f6; --nav-inactive: #64748b;
-          --bar-bg: #e2e8f0;
-        }
-        [data-theme="dark"] {
-          --bg-page: #0f172a; --bg-card: #1e293b; --bg-input: #0f172a; --bg-header: #1e293b;
-          --bg-completed: #1a2332; --bg-hover: #1e293b;
-          --border: #334155; --border-light: #1e293b;
-          --text-primary: #e2e8f0; --text-body: #cbd5e1; --text-secondary: #94a3b8; --text-muted: #64748b;
-          --brand: #818cf8; --brand-light: rgba(129,140,248,0.15); --brand-glow: rgba(129,140,248,0.15);
-          --shadow: 0 1px 3px rgba(0,0,0,0.2); --shadow-hover: 0 2px 12px rgba(0,0,0,0.3);
-          --nav-bg: #0f172a; --nav-inactive: #94a3b8;
-          --bar-bg: #334155;
-        }
-        [data-theme="dark"] ::-webkit-scrollbar-thumb { background: rgba(129,140,248,0.2); }
-        [data-theme="dark"] ::selection { background: #818cf8; }
-        [data-theme="dark"] input, [data-theme="dark"] textarea, [data-theme="dark"] select {
-          color-scheme: dark;
-        }
-        @media (max-width: 640px) {
-          .hub-header { padding: 10px 16px !important; flex-wrap: wrap; gap: 8px; }
-          .hub-nav { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
-          .hub-nav button { padding: 7px 14px !important; font-size: 12px !important; white-space: nowrap; }
-          .hub-main { padding: 20px 14px !important; }
-          .hub-stats-grid { grid-template-columns: repeat(3, 1fr) !important; }
-          .hub-filter-bar { flex-direction: column; align-items: stretch !important; }
-          .hub-template-grid { grid-template-columns: repeat(2, 1fr) !important; }
-          .hub-priority-grid { grid-template-columns: 1fr 1fr !important; }
-          .hub-analytics-metrics { grid-template-columns: repeat(2, 1fr) !important; }
-          .hub-analytics-cols { grid-template-columns: 1fr !important; }
-          .hub-week-compare { flex-direction: column; gap: 4px !important; }
-          .hub-home-grid { grid-template-columns: repeat(2, 1fr) !important; }
-          .hub-archive-types { display: none !important; }
-        }
-      `}</style>
-
-      <header className="hub-header" style={{ padding: "12px 32px", display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "1px solid var(--border)", background: "var(--bg-header)", position: "sticky", top: 0, zIndex: 50, boxShadow: "var(--shadow)" }}>
+    <div style={{ minHeight: "100vh", background: "#f1f5f9", fontFamily: FONT }}>
+      {/* Top Bar */}
+      <div style={{
+        background: "#fff", borderBottom: "1px solid #e2e8f0",
+        padding: "14px 24px", display: "flex", justifyContent: "space-between",
+        alignItems: "center", position: "sticky", top: 0, zIndex: 100, flexWrap: "wrap", gap: 12,
+      }}>
         <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-          <img src={ALPS_LOGO} alt="Alps" style={{ height: 38, objectFit: "contain" }} />
-          <div style={{ width: 1, height: 28, background: "var(--border)" }}></div>
+          <button onClick={() => setView("setup")} style={{
+            padding: "8px 16px", borderRadius: 8, border: "1px solid #e2e8f0",
+            background: "#fff", fontSize: 13, cursor: "pointer", fontWeight: 600, color: "#475569",
+          }}>← Edit Details</button>
           <div>
-            <h1 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "var(--brand)", lineHeight: 1.2 }}>Marketing Hub</h1>
-            <span style={{ fontSize: 11, color: "var(--text-muted)" }}>{currentSection === "tickets" ? "Ticket Management" : currentSection === "archive" ? "Marketing Archive" : "Your marketing toolkit"}</span>
+            <span style={{ fontWeight: 700, fontSize: 15, color: "#1e293b" }}>{config.brokerName}</span>
+            <span style={{ fontSize: 12, color: "#94a3b8", marginLeft: 8 }}>
+              {filteredProducts.length} product{filteredProducts.length !== 1 ? "s" : ""}
+            </span>
           </div>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <button onClick={() => setDark(!dark)} title={dark ? "Switch to light mode" : "Switch to dark mode"} style={{ padding: "7px 10px", borderRadius: 8, border: "1px solid var(--border)", background: "var(--bg-card)", cursor: "pointer", fontSize: 16, lineHeight: 1, transition: "all 0.2s", color: "var(--text-secondary)" }}>
-            {dark ? "\u2600" : "\u{1F319}"}
-          </button>
-          <nav className="hub-nav" style={{ display: "flex", gap: 4, background: "var(--nav-bg)", borderRadius: 10, padding: 3, border: "1px solid var(--border)", alignItems: "center" }}>
-          {view !== "hub" && (
-            <button onClick={() => setView("hub")} style={{ padding: "8px 14px", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer", border: "none", transition: "all 0.2s", background: "transparent", color: "var(--nav-inactive)" }}>
-              {"\u2190"} Hub
-            </button>
-          )}
-          {view !== "hub" && currentSection !== "hub" && <div style={{ width: 1, height: 20, background: "var(--border)", flexShrink: 0 }}></div>}
-          {currentSection === "tickets" && (<>
-            <button onClick={() => setView("form")} style={{ padding: "8px 20px", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer", border: "none", transition: "all 0.2s", background: view === "form" ? "var(--brand)" : "transparent", color: view === "form" ? "#fff" : "var(--nav-inactive)" }}>
-              + New
-            </button>
-            <button onClick={handleDashboardClick} style={{ padding: "8px 20px", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer", border: "none", transition: "all 0.2s", background: (view === "dashboard" || view === "password") ? "var(--brand)" : "transparent", color: (view === "dashboard" || view === "password") ? "#fff" : "var(--nav-inactive)", position: "relative" }}>
-              {dashUnlocked ? "" : "\u{1F512} "}Dashboard
-              {dashUnlocked && activeCount > 0 && (
-                <span style={{ position: "absolute", top: 0, right: 2, width: 18, height: 18, borderRadius: "50%", background: "#dc2626", color: "#fff", fontSize: 10, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center" }}>{activeCount}</span>
-              )}
-            </button>
-            {dashUnlocked && (
-              <button onClick={() => setView("analytics")} style={{ padding: "8px 20px", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer", border: "none", transition: "all 0.2s", background: view === "analytics" ? "var(--brand)" : "transparent", color: view === "analytics" ? "#fff" : "var(--nav-inactive)" }}>
-                Analytics
-              </button>
-            )}
-            {dashUnlocked && (
-              <button onClick={() => setView("activity")} style={{ padding: "8px 20px", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer", border: "none", transition: "all 0.2s", background: view === "activity" ? "var(--brand)" : "transparent", color: view === "activity" ? "#fff" : "var(--nav-inactive)" }}>
-                Activity
-              </button>
-            )}
-            <button onClick={() => { setLastSubmittedRef(null); setView("tracker"); }} style={{ padding: "8px 20px", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer", border: "none", transition: "all 0.2s", background: (view === "tracker" || view === "submitted") ? "var(--brand)" : "transparent", color: (view === "tracker" || view === "submitted") ? "#fff" : "var(--nav-inactive)" }}>
-              {"\u{1F50D}"} Track
-            </button>
-          </>)}
-          {currentSection === "archive" && (<>
-            <button onClick={() => setView("archive")} style={{ padding: "8px 20px", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer", border: "none", transition: "all 0.2s", background: view === "archive" ? "var(--brand)" : "transparent", color: view === "archive" ? "#fff" : "var(--nav-inactive)" }}>
-              Browse
-            </button>
-            {dashUnlocked && (
-              <button onClick={() => { setEditArchiveEntry("new"); setView("archive_add"); }} style={{ padding: "8px 20px", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer", border: "none", transition: "all 0.2s", background: (view === "archive_add" || view === "archive_edit") ? "var(--brand)" : "transparent", color: (view === "archive_add" || view === "archive_edit") ? "#fff" : "var(--nav-inactive)" }}>
-                + Add Entry
-              </button>
-            )}
-          </>)}
-          {currentSection === "hub" && (
-            <button style={{ padding: "8px 20px", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "default", border: "none", background: "var(--brand)", color: "#fff" }}>
-              Home
-            </button>
-          )}
-        </nav>
-        </div>
-      </header>
+        <button onClick={handlePrint} style={{
+          padding: "10px 20px", borderRadius: 8, border: "none",
+          background: `linear-gradient(135deg, ${config.brandColor} 0%, ${adjustColor(config.brandColor, 30)} 100%)`,
+          color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer",
+        }}>🖨️ Print / Save as PDF</button>
+      </div>
 
-      <main className="hub-main" style={{ maxWidth: 900, margin: "0 auto", padding: "32px 24px", display: "flex", justifyContent: "center" }}>
-        {loading ? (
-          <div style={{ textAlign: "center", padding: "64px 20px", color: "var(--text-muted)" }}>
-            <div style={{ width: 40, height: 40, border: "3px solid var(--border)", borderTopColor: "var(--brand)", borderRadius: "50%", animation: "spin 0.8s linear infinite", margin: "0 auto 16px" }}></div>
-            <p style={{ fontSize: 14, margin: 0 }}>Loading tickets...</p>
+      <div style={{ padding: "28px 20px" }}>
+        {/* Export Instructions */}
+        <div style={{
+          maxWidth: 900, margin: "0 auto 24px", background: "#fff",
+          border: "1px solid #e2e8f0", borderRadius: 12, padding: "18px 24px",
+          display: "flex", alignItems: "flex-start", gap: 14,
+        }}>
+          <span style={{ fontSize: 22, flexShrink: 0, marginTop: 1 }}>📄</span>
+          <div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: "#1e293b", marginBottom: 6 }}>How to Export Your Sheets</div>
+            <div style={{ fontSize: 12.5, color: "#475569", lineHeight: 1.7 }}>
+              <strong>1.</strong> Click <strong>'Print / Save as PDF'</strong> above.{" "}
+              <strong>2.</strong> When the popup comes, change the <strong>'Destination'</strong> to <strong>'Save as PDF'</strong>.{" "}
+              <strong>3.</strong> Make sure both <strong>'Headers and Footers'</strong> and <strong>'Background Graphics'</strong> are selected.{" "}
+              <strong>4.</strong> Hit <strong>'Save'</strong> and that's it! Enjoy your free print-ready marketing flyers. 🎉
+            </div>
           </div>
-        ) : view === "hub" ? (
-          <HubHome onNavigate={(id) => { if (id === "dashboard") { handleDashboardClick(); } else { setView(id); } }} tickets={tickets} dashUnlocked={dashUnlocked} />
-        ) : view === "form" ? (
-          <div style={{ maxWidth: 560, width: "100%" }}>
-            <TicketForm onSubmit={handleSubmit} />
-            {tickets.length > 0 && (
-              <div style={{ marginTop: 24 }}>
-                <h3 style={{ margin: "0 0 12px", fontSize: 14, fontWeight: 600, color: "var(--brand)", letterSpacing: "0.02em" }}>Ticket Overview</h3>
-                <StatsBar tickets={tickets} />
-              </div>
-            )}
+        </div>
+
+        <CategoryFilter selectedCategory={selectedCategory} setSelectedCategory={setSelectedCategory} />
+
+        <div style={{
+          display: "flex", flexWrap: "wrap", gap: 6, justifyContent: "center",
+          marginBottom: 32, maxWidth: 900, margin: "0 auto 32px",
+        }}>
+          {PRODUCTS.filter((p) => !selectedCategory || p.category === selectedCategory).map((p) => (
+            <button key={p.id} onClick={() => toggleProduct(p.id)} style={{
+              padding: "5px 12px", borderRadius: 16,
+              border: `1.5px solid ${selectedProducts.has(p.id) ? p.categoryColor : "#e2e8f0"}`,
+              background: selectedProducts.has(p.id) ? `${p.categoryColor}15` : "#fff",
+              fontSize: 11.5, fontWeight: 600, cursor: "pointer",
+              color: selectedProducts.has(p.id) ? p.categoryColor : "#94a3b8",
+            }}>
+              {selectedProducts.has(p.id) ? "✓ " : ""}{p.title}
+            </button>
+          ))}
+        </div>
+
+        <div ref={printRef}>
+          {filteredProducts.map((product) => (
+            <ProductSheet key={product.id} product={product} config={config} />
+          ))}
+        </div>
+
+        {filteredProducts.length === 0 && (
+          <div style={{ textAlign: "center", padding: "60px 20px", color: "#94a3b8" }}>
+            <div style={{ fontSize: 48, marginBottom: 16 }}>📋</div>
+            <p style={{ fontSize: 16, fontWeight: 600 }}>No products selected</p>
+            <p style={{ fontSize: 13 }}>Toggle products above to include them in your sheets.</p>
           </div>
-        ) : view === "submitted" ? (
-          <SubmitterView tickets={tickets} submittedRef={lastSubmittedRef} onAddNote={handleAddNote} onBackToForm={() => setView("form")} />
-        ) : view === "tracker" ? (
-          <SubmitterView tickets={tickets} submittedRef={null} onAddNote={handleAddNote} onBackToForm={() => setView("form")} />
-        ) : view === "password" ? (
-          <PasswordGate onUnlock={handleUnlock} />
-        ) : view === "activity" ? (
-          <ActivityLog tickets={tickets} />
-        ) : view === "analytics" ? (
-          <AnalyticsPanel tickets={tickets} />
-        ) : view === "archive" ? (
-          <MarketingArchive entries={archiveEntries} isAdmin={dashUnlocked} onManage={(id) => { if (id) { setEditArchiveEntry(id); setView("archive_edit"); } else { setEditArchiveEntry("new"); setView("archive_add"); } }} />
-        ) : (view === "archive_add" || view === "archive_edit") ? (
-          <ArchiveForm entry={editArchiveEntry !== "new" ? archiveEntries.find((e) => e.id === editArchiveEntry) : null} onSave={handleArchiveSave} onCancel={() => setView("archive")} onDelete={handleArchiveDelete} />
-        ) : (
-          <Dashboard tickets={tickets} onStatusChange={handleStatusChange} onComplete={handleComplete} onAddNote={handleAddNote} onDelete={handleDelete} onUpdatePriority={handleUpdatePriority} onUpdateDeadline={handleUpdateDeadline} onReopen={handleReopen} onTogglePin={handleTogglePin} />
         )}
-      </main>
+      </div>
     </div>
+  );
+}
+
+// ═══════════════════════════════════════════════
+// CLAIMS CARD PREVIEW COMPONENT
+// ═══════════════════════════════════════════════
+function ClaimsCardPreview({ product, profile, format }) {
+  const brandColor = profile.brandColor || "#1a3a5c";
+  const isBusinessCard = format === "business-card";
+
+  if (isBusinessCard) {
+    return (
+      <div style={{
+        width: 425, height: 275, background: "#fff", borderRadius: 8,
+        overflow: "hidden", fontFamily: FONT, boxShadow: "0 4px 20px rgba(0,0,0,0.1)",
+        display: "flex", flexDirection: "column",
+      }}>
+        <div style={{
+          background: `linear-gradient(135deg, ${brandColor} 0%, ${adjustColor(brandColor, 30)} 100%)`,
+          padding: "12px 16px", display: "flex", justifyContent: "space-between", alignItems: "center",
+        }}>
+          {profile.logoUrl && (
+            <div style={{ background: "#fff", borderRadius: 6, padding: "4px 8px", display: "inline-flex" }}>
+              <img src={profile.logoUrl} alt="" style={{ maxHeight: 20, objectFit: "contain" }} />
+            </div>
+          )}
+          <span style={{ fontSize: 9, color: "rgba(255,255,255,0.8)", fontWeight: 600 }}>{product.title}</span>
+        </div>
+        <div style={{ flex: 1, padding: "10px 16px 8px", display: "flex", flexDirection: "column" }}>
+          <h3 style={{ margin: "0 0 6px", fontSize: 13, fontWeight: 800, color: "#1e293b" }}>{product.headline}</h3>
+          <div style={{
+            background: `${product.color}10`, borderRadius: 8, padding: "8px 12px",
+            marginBottom: 8, textAlign: "center",
+          }}>
+            <div style={{ fontSize: 8, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: 0.5 }}>Claims Line</div>
+            <div style={{ fontSize: 18, fontWeight: 800, color: product.color, letterSpacing: 0.5 }}>{product.claimsPhone}</div>
+          </div>
+          <div style={{ marginTop: "auto", display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
+            <div style={{ fontSize: 8, color: "#94a3b8", lineHeight: 1.5 }}>
+              {profile.phone && <div>📞 {profile.phone}</div>}
+              {profile.email && <div>✉️ {profile.email}</div>}
+            </div>
+            <span style={{ fontSize: 7, color: "#cbd5e1" }}>Powered by Alps</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // A5 Format
+  return (
+    <div style={{
+      width: 500, minHeight: 700, background: "#fff", borderRadius: 12,
+      overflow: "hidden", fontFamily: FONT, boxShadow: "0 4px 24px rgba(0,0,0,0.08)",
+      display: "flex", flexDirection: "column",
+    }}>
+      {/* Header */}
+      <div style={{
+        background: `linear-gradient(135deg, ${brandColor} 0%, ${adjustColor(brandColor, 30)} 100%)`,
+        padding: "28px 32px 24px", position: "relative", overflow: "hidden",
+      }}>
+        <div style={{ position: "absolute", top: -30, right: -30, width: 140, height: 140, borderRadius: "50%", background: "rgba(255,255,255,0.06)" }} />
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
+          {profile.logoUrl && (
+            <div style={{ background: "#fff", borderRadius: 8, padding: "6px 12px", display: "inline-flex" }}>
+              <img src={profile.logoUrl} alt="" style={{ maxHeight: 32, objectFit: "contain" }} />
+            </div>
+          )}
+          <span style={{ fontSize: 10, color: "rgba(255,255,255,0.6)", fontWeight: 600 }}>{product.title}</span>
+        </div>
+        <h2 style={{ margin: 0, fontSize: 28, fontWeight: 800, color: "#fff", lineHeight: 1.2 }}>
+          {product.headline}
+        </h2>
+      </div>
+
+      {/* Claims Phone */}
+      <div style={{
+        padding: "20px 32px", background: `${product.color}08`,
+        borderBottom: `2px solid ${product.color}20`, textAlign: "center",
+      }}>
+        <div style={{ fontSize: 11, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: 1, marginBottom: 4 }}>Claims Line</div>
+        <div style={{ fontSize: 32, fontWeight: 800, color: product.color, letterSpacing: 0.5 }}>{product.claimsPhone}</div>
+      </div>
+
+      {/* Steps */}
+      <div style={{ flex: 1, padding: "24px 32px" }}>
+        <h3 style={{ margin: "0 0 16px", fontSize: 14, fontWeight: 700, color: "#1e293b" }}>What to do:</h3>
+        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          {product.steps.map((step, i) => (
+            <div key={i} style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
+              <div style={{
+                width: 28, height: 28, borderRadius: 8, flexShrink: 0,
+                background: `${product.color}15`, color: product.color,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                fontSize: 13, fontWeight: 800,
+              }}>{i + 1}</div>
+              <p style={{ margin: 0, fontSize: 13.5, color: "#334155", lineHeight: 1.6, paddingTop: 3 }}>{step}</p>
+            </div>
+          ))}
+        </div>
+        {product.footerNote && (
+          <div style={{
+            marginTop: 20, padding: "12px 16px", background: "#f8fafc",
+            borderRadius: 8, border: "1px solid #e2e8f0",
+            fontSize: 12, color: "#64748b", lineHeight: 1.5, fontStyle: "italic",
+          }}>
+            💡 {product.footerNote}
+          </div>
+        )}
+      </div>
+
+      {/* Footer */}
+      <div style={{
+        padding: "16px 32px", borderTop: "1px solid #e2e8f0",
+        display: "flex", justifyContent: "space-between", alignItems: "center",
+        background: "#fafbfc",
+      }}>
+        <div style={{ fontSize: 12, color: "#64748b" }}>
+          {profile.phone && <span style={{ marginRight: 12 }}>📞 {profile.phone}</span>}
+          {profile.email && <span>✉️ {profile.email}</span>}
+        </div>
+        <span style={{ fontSize: 9, color: "#cbd5e1", fontWeight: 600 }}>Powered by Alps</span>
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════
+// PAGE: CLAIMS GUIDANCE CARD
+// ═══════════════════════════════════════════════
+function ClaimsGuidanceCard() {
+  const { profile } = useBrokerProfile();
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const navigate = useNavigate();
+
+  const handleExport = (format) => {
+    if (!selectedProduct || !profile) return;
+    const product = CLAIMS_PRODUCTS.find((p) => p.id === selectedProduct);
+    if (!product) return;
+
+    const printWindow = window.open("", "_blank");
+    if (!printWindow) return;
+
+    const brandColor = profile.brandColor || "#1a3a5c";
+    const isBC = format === "business-card";
+    const pageSize = isBC ? "85mm 55mm" : "148mm 210mm";
+
+    const stepsHTML = product.steps.map((step, i) => {
+      if (isBC) return "";
+      return `<div style="display:flex;gap:12px;align-items:flex-start;margin-bottom:14px;">
+        <div style="width:28px;height:28px;border-radius:8px;flex-shrink:0;background:${product.color}22;color:${product.color};display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;">${i+1}</div>
+        <p style="margin:0;font-size:13.5px;color:#334155;line-height:1.6;padding-top:3px;">${step}</p>
+      </div>`;
+    }).join("");
+
+    let bodyContent;
+    if (isBC) {
+      bodyContent = `
+        <div style="width:85mm;height:55mm;background:#fff;font-family:'Segoe UI',system-ui,sans-serif;display:flex;flex-direction:column;overflow:hidden;">
+          <div style="background:linear-gradient(135deg,${brandColor} 0%,${brandColor}cc 100%);padding:8px 12px;display:flex;justify-content:space-between;align-items:center;">
+            ${profile.logoUrl ? `<div style="background:#fff;border-radius:4px;padding:3px 6px;display:inline-flex;"><img src="${profile.logoUrl}" style="max-height:16px;object-fit:contain;" /></div>` : ""}
+            <span style="font-size:7px;color:rgba(255,255,255,0.8);font-weight:600;">${product.title}</span>
+          </div>
+          <div style="flex:1;padding:8px 12px 6px;display:flex;flex-direction:column;">
+            <h3 style="margin:0 0 4px;font-size:11px;font-weight:800;color:#1e293b;">${product.headline}</h3>
+            <div style="background:${product.color}10;border-radius:6px;padding:6px 10px;text-align:center;margin-bottom:6px;">
+              <div style="font-size:7px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px;">Claims Line</div>
+              <div style="font-size:16px;font-weight:800;color:${product.color};letter-spacing:0.5px;">${product.claimsPhone}</div>
+            </div>
+            <div style="margin-top:auto;display:flex;justify-content:space-between;align-items:flex-end;">
+              <div style="font-size:7px;color:#94a3b8;line-height:1.5;">
+                ${profile.phone ? `<div>📞 ${profile.phone}</div>` : ""}
+                ${profile.email ? `<div>✉️ ${profile.email}</div>` : ""}
+              </div>
+              <span style="font-size:6px;color:#cbd5e1;">Powered by Alps</span>
+            </div>
+          </div>
+        </div>
+      `;
+    } else {
+      bodyContent = `
+        <div style="width:148mm;min-height:210mm;background:#fff;font-family:'Segoe UI',system-ui,sans-serif;display:flex;flex-direction:column;">
+          <div style="background:linear-gradient(135deg,${brandColor} 0%,${brandColor}cc 100%);padding:24px 28px 20px;position:relative;overflow:hidden;">
+            <div style="position:absolute;top:-30px;right:-30px;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,0.06);"></div>
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;">
+              ${profile.logoUrl ? `<div style="background:#fff;border-radius:6px;padding:5px 10px;display:inline-flex;"><img src="${profile.logoUrl}" style="max-height:28px;object-fit:contain;" /></div>` : ""}
+              <span style="font-size:9px;color:rgba(255,255,255,0.6);font-weight:600;">${product.title}</span>
+            </div>
+            <h2 style="margin:0;font-size:24px;font-weight:800;color:#fff;line-height:1.2;">${product.headline}</h2>
+          </div>
+          <div style="padding:18px 28px;background:${product.color}08;border-bottom:2px solid ${product.color}20;text-align:center;">
+            <div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;margin-bottom:3px;">Claims Line</div>
+            <div style="font-size:28px;font-weight:800;color:${product.color};letter-spacing:0.5px;">${product.claimsPhone}</div>
+          </div>
+          <div style="flex:1;padding:20px 28px;">
+            <h3 style="margin:0 0 14px;font-size:13px;font-weight:700;color:#1e293b;">What to do:</h3>
+            ${stepsHTML}
+            ${product.footerNote ? `<div style="margin-top:18px;padding:10px 14px;background:#f8fafc;border-radius:8px;border:1px solid #e2e8f0;font-size:11px;color:#64748b;line-height:1.5;font-style:italic;">💡 ${product.footerNote}</div>` : ""}
+          </div>
+          <div style="padding:14px 28px;border-top:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center;background:#fafbfc;">
+            <div style="font-size:11px;color:#64748b;">
+              ${profile.phone ? `<span style="margin-right:12px;">📞 ${profile.phone}</span>` : ""}
+              ${profile.email ? `<span>✉️ ${profile.email}</span>` : ""}
+            </div>
+            <span style="font-size:8px;color:#cbd5e1;font-weight:600;">Powered by Alps</span>
+          </div>
+        </div>
+      `;
+    }
+
+    printWindow.document.write(`<!DOCTYPE html><html><head>
+      <title>${profile.brokerName} - ${product.title} Claims Card</title>
+      <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:'Segoe UI',system-ui,sans-serif; background:#fff; }
+        @media print { body { background:#fff; } @page { margin:0; size:${pageSize}; } }
+      </style>
+    </head><body>${bodyContent}</body></html>`);
+    printWindow.document.close();
+    setTimeout(() => printWindow.print(), 500);
+  };
+
+  const product = CLAIMS_PRODUCTS.find((p) => p.id === selectedProduct);
+
+  return (
+    <div style={{ minHeight: "100vh", background: "#f1f5f9", fontFamily: FONT }}>
+      <TopNav title="Claims Guidance Card" />
+
+      <div style={{ maxWidth: 900, margin: "0 auto", padding: "36px 20px 60px" }}>
+        {/* Header */}
+        <div style={{ textAlign: "center", marginBottom: 32 }}>
+          <h2 style={{ margin: "0 0 6px", fontSize: 24, fontWeight: 800, color: "#1e293b" }}>
+            Claims Guidance Cards
+          </h2>
+          <p style={{ margin: 0, fontSize: 14, color: "#64748b" }}>
+            Select a product to preview and export branded claims cards for your clients.
+          </p>
+        </div>
+
+        {/* No profile warning */}
+        {!profile && (
+          <div style={{
+            background: "#fff", border: "2px solid #F5A623", borderRadius: 12,
+            padding: "24px", textAlign: "center", marginBottom: 28,
+          }}>
+            <div style={{ fontSize: 28, marginBottom: 8 }}>👤</div>
+            <h3 style={{ margin: "0 0 8px", fontSize: 16, fontWeight: 700, color: "#1e293b" }}>
+              Set Up Your Broker Profile First
+            </h3>
+            <p style={{ margin: "0 0 16px", fontSize: 13, color: "#64748b" }}>
+              Your branding details are needed to generate claims cards.
+            </p>
+            <Link to="/broker-profile" style={{
+              display: "inline-block", padding: "10px 24px", borderRadius: 10,
+              background: "linear-gradient(135deg, #E91E8B 0%, #F5A623 100%)",
+              color: "#fff", fontSize: 14, fontWeight: 700, textDecoration: "none",
+            }}>Complete Your Profile →</Link>
+          </div>
+        )}
+
+        {/* Product selector */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16, marginBottom: 32 }}>
+          {CLAIMS_PRODUCTS.map((cp) => (
+            <div key={cp.id} onClick={() => setSelectedProduct(cp.id)} style={{
+              background: "#fff", borderRadius: 14, padding: "24px 20px",
+              border: `2px solid ${selectedProduct === cp.id ? cp.color : "#e2e8f0"}`,
+              cursor: "pointer", textAlign: "center",
+              boxShadow: selectedProduct === cp.id ? `0 4px 16px ${cp.color}20` : "none",
+              transition: "all 0.15s",
+            }}>
+              <div style={{ fontSize: 32, marginBottom: 8 }}>{cp.icon}</div>
+              <h3 style={{ margin: "0 0 4px", fontSize: 15, fontWeight: 700, color: "#1e293b" }}>{cp.title}</h3>
+              <p style={{ margin: 0, fontSize: 12, color: "#94a3b8" }}>{cp.headline}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* Preview + Export */}
+        {product && profile && (
+          <div>
+            {/* Export buttons */}
+            <div style={{ display: "flex", gap: 12, justifyContent: "center", marginBottom: 28 }}>
+              <button onClick={() => handleExport("a5")} style={{
+                padding: "12px 24px", borderRadius: 10, border: "none",
+                background: `linear-gradient(135deg, ${product.color} 0%, ${product.color}cc 100%)`,
+                color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer",
+              }}>📄 Download A5 Card (PDF)</button>
+              <button onClick={() => handleExport("business-card")} style={{
+                padding: "12px 24px", borderRadius: 10,
+                border: `2px solid ${product.color}`,
+                background: "#fff", color: product.color,
+                fontSize: 13, fontWeight: 700, cursor: "pointer",
+              }}>🃏 Download Business Card (PDF)</button>
+            </div>
+
+            {/* Export Instructions */}
+            <div style={{
+              maxWidth: 600, margin: "0 auto 28px", background: "#fff",
+              border: "1px solid #e2e8f0", borderRadius: 12, padding: "14px 20px",
+              display: "flex", alignItems: "flex-start", gap: 12,
+            }}>
+              <span style={{ fontSize: 18, flexShrink: 0 }}>📄</span>
+              <div style={{ fontSize: 11.5, color: "#475569", lineHeight: 1.7 }}>
+                <strong>1.</strong> Click a download button above.{" "}
+                <strong>2.</strong> Change <strong>'Destination'</strong> to <strong>'Save as PDF'</strong>.{" "}
+                <strong>3.</strong> Ensure <strong>'Background Graphics'</strong> is selected.{" "}
+                <strong>4.</strong> Hit <strong>'Save'</strong>.
+              </div>
+            </div>
+
+            {/* Previews */}
+            <div style={{ display: "flex", gap: 32, justifyContent: "center", flexWrap: "wrap" }}>
+              <div>
+                <div style={{ fontSize: 11, fontWeight: 700, color: "#94a3b8", textAlign: "center", marginBottom: 10, textTransform: "uppercase", letterSpacing: 1 }}>A5 Leave-Behind</div>
+                <ClaimsCardPreview product={product} profile={profile} format="a5" />
+              </div>
+              <div>
+                <div style={{ fontSize: 11, fontWeight: 700, color: "#94a3b8", textAlign: "center", marginBottom: 10, textTransform: "uppercase", letterSpacing: 1 }}>Business Card</div>
+                <ClaimsCardPreview product={product} profile={profile} format="business-card" />
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════
+// APP ROOT
+// ═══════════════════════════════════════════════
+export default function App() {
+  return (
+    <BrokerProvider>
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/broker-profile" element={<BrokerProfilePage />} />
+        <Route path="/product-sheet-generator" element={<ProductSheetGenerator />} />
+        <Route path="/claims-guidance-card" element={<ClaimsGuidanceCard />} />
+      </Routes>
+    </BrokerProvider>
   );
 }
