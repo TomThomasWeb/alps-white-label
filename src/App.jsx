@@ -360,7 +360,7 @@ const CLAIMS_PRODUCTS = [
       "Take photographs of the scene — include all vehicles involved and any visible damage.",
       "Record the following: date and time of the accident, third party details (name, registration, vehicle make/model), and any witness details.",
     ],
-    footerNote: "You can track your claim online using the Valid8 portal.",
+    footerNote: "You can track your claim online using the Valid8 portal at valid8.alpsltd.co.uk",
   },
   {
     id: "road-rescue-claims",
@@ -502,20 +502,20 @@ function HomePage() {
   return (
     <div style={{
       minHeight: "100vh",
-      background: "linear-gradient(170deg, #0f172a 0%, #1e293b 40%, #0f172a 100%)",
+      background: "linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%)",
       fontFamily: FONT,
     }}>
       {/* Header area */}
       <div style={{ padding: "48px 24px 20px", textAlign: "center" }}>
         <img src={ALPS_LOGO} alt="Alps" style={{ height: 48, objectFit: "contain", marginBottom: 20 }} />
         <h1 style={{
-          fontSize: 36, fontWeight: 800, color: "#fff",
+          fontSize: 36, fontWeight: 800, color: "#1e293b",
           margin: "0 0 8px", letterSpacing: -1,
         }}>
           Broker Toolkit
         </h1>
         <p style={{
-          fontSize: 16, color: "#94a3b8", margin: 0, maxWidth: 460, marginInline: "auto",
+          fontSize: 16, color: "#64748b", margin: 0, maxWidth: 460, marginInline: "auto",
           lineHeight: 1.6,
         }}>
           Everything your team needs to support and win clients
@@ -528,12 +528,13 @@ function HomePage() {
           <Link to="/broker-profile" style={{
             display: "inline-flex", alignItems: "center", gap: 8,
             padding: "8px 18px", borderRadius: 24,
-            background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)",
-            fontSize: 13, color: "#94a3b8", textDecoration: "none",
+            background: "#fff", border: "1px solid #e2e8f0",
+            fontSize: 13, color: "#64748b", textDecoration: "none",
+            boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
             transition: "background 0.15s",
           }}>
             {profile.logoUrl && <img src={profile.logoUrl} alt="" style={{ height: 20, borderRadius: 4 }} />}
-            <span style={{ fontWeight: 600, color: "#e2e8f0" }}>{profile.brokerName}</span>
+            <span style={{ fontWeight: 600, color: "#1e293b" }}>{profile.brokerName}</span>
             <span>· Edit Profile</span>
           </Link>
         ) : (
@@ -557,26 +558,27 @@ function HomePage() {
         {tools.map((tool) => (
           <Link key={tool.path} to={tool.path} style={{
             textDecoration: "none",
-            background: "rgba(255,255,255,0.04)",
-            border: "1px solid rgba(255,255,255,0.08)",
+            background: "#fff",
+            border: "1px solid #e2e8f0",
             borderRadius: 16, padding: "32px 28px",
             transition: "all 0.2s",
             cursor: "pointer",
             display: "block",
+            boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
           }}
-          onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.08)"; e.currentTarget.style.borderColor = tool.color; e.currentTarget.style.transform = "translateY(-2px)"; }}
-          onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.04)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)"; e.currentTarget.style.transform = "none"; }}
+          onMouseEnter={(e) => { e.currentTarget.style.borderColor = tool.color; e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = `0 8px 24px ${tool.color}15`; }}
+          onMouseLeave={(e) => { e.currentTarget.style.borderColor = "#e2e8f0"; e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,0.04)"; }}
           >
             <div style={{
               width: 48, height: 48, borderRadius: 12,
-              background: `${tool.color}20`,
+              background: `${tool.color}12`,
               display: "flex", alignItems: "center", justifyContent: "center",
               fontSize: 24, marginBottom: 18,
             }}>{tool.icon}</div>
-            <h3 style={{ margin: "0 0 8px", fontSize: 18, fontWeight: 700, color: "#f1f5f9" }}>
+            <h3 style={{ margin: "0 0 8px", fontSize: 18, fontWeight: 700, color: "#1e293b" }}>
               {tool.title}
             </h3>
-            <p style={{ margin: 0, fontSize: 14, color: "#94a3b8", lineHeight: 1.5 }}>
+            <p style={{ margin: 0, fontSize: 14, color: "#64748b", lineHeight: 1.5 }}>
               {tool.desc}
             </p>
           </Link>
@@ -584,21 +586,21 @@ function HomePage() {
 
         {/* Coming soon placeholder */}
         <div style={{
-          background: "rgba(255,255,255,0.02)",
-          border: "1px dashed rgba(255,255,255,0.08)",
+          background: "#f8fafc",
+          border: "1px dashed #cbd5e1",
           borderRadius: 16, padding: "32px 28px",
-          opacity: 0.5,
+          opacity: 0.6,
         }}>
           <div style={{
             width: 48, height: 48, borderRadius: 12,
-            background: "rgba(255,255,255,0.04)",
+            background: "#f1f5f9",
             display: "flex", alignItems: "center", justifyContent: "center",
-            fontSize: 24, marginBottom: 18, color: "#475569",
+            fontSize: 24, marginBottom: 18, color: "#94a3b8",
           }}>🔜</div>
-          <h3 style={{ margin: "0 0 8px", fontSize: 18, fontWeight: 700, color: "#475569" }}>
+          <h3 style={{ margin: "0 0 8px", fontSize: 18, fontWeight: 700, color: "#94a3b8" }}>
             More Tools Coming Soon
           </h3>
-          <p style={{ margin: 0, fontSize: 14, color: "#475569", lineHeight: 1.5 }}>
+          <p style={{ margin: 0, fontSize: 14, color: "#94a3b8", lineHeight: 1.5 }}>
             We're building more tools to help you win and support clients.
           </p>
         </div>
@@ -606,11 +608,11 @@ function HomePage() {
 
       {/* Footer */}
       <div style={{ textAlign: "center", padding: "0 24px 40px" }}>
-        <p style={{ fontSize: 10, color: "#475569", margin: "0 0 4px" }}>
+        <p style={{ fontSize: 10, color: "#94a3b8", margin: "0 0 4px" }}>
           If you experience any problems, or require any assistance, please get in touch with marketing at{" "}
           <a href="mailto:tom.thomas@alpsltd.co.uk" style={{ color: "#64748b" }}>tom.thomas@alpsltd.co.uk</a>
         </p>
-        <p style={{ fontSize: 9, color: "#334155" }}>v2.0</p>
+        <p style={{ fontSize: 9, color: "#cbd5e1" }}>v2.0</p>
       </div>
     </div>
   );
@@ -941,183 +943,6 @@ function CategoryFilter({ selectedCategory, setSelectedCategory }) {
   );
 }
 
-function PSGConfigPanel({ config, setConfig, onGenerate }) {
-  const fileInputRef = useRef(null);
-
-  const handleLogoUpload = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (ev) => setConfig((c) => ({ ...c, logoUrl: ev.target.result }));
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const inputStyle = {
-    width: "100%", padding: "12px 16px",
-    border: "2px solid #e2e8f0", borderRadius: 10,
-    fontSize: 14, fontFamily: "inherit", outline: "none",
-    background: "#fff", boxSizing: "border-box",
-  };
-  const labelStyle = {
-    display: "block", fontSize: 12, fontWeight: 700,
-    color: "#475569", marginBottom: 6,
-    textTransform: "uppercase", letterSpacing: 0.8,
-  };
-
-  return (
-    <div style={{
-      background: "#fff", borderRadius: 20, padding: "40px 36px",
-      boxShadow: "0 8px 40px rgba(0,0,0,0.08)", maxWidth: 520, margin: "0 auto",
-    }}>
-      <div style={{ textAlign: "center", marginBottom: 32 }}>
-        <div style={{
-          width: 56, height: 56, borderRadius: 14,
-          background: "linear-gradient(135deg, #1e293b 0%, #334155 100%)",
-          display: "inline-flex", alignItems: "center", justifyContent: "center",
-          fontSize: 26, marginBottom: 16,
-        }}>🏷️</div>
-        <h2 style={{ margin: "0 0 6px", fontSize: 24, fontWeight: 800, color: "#1e293b" }}>
-          Brand Your Product Sheets
-        </h2>
-        <p style={{ margin: 0, fontSize: 14, color: "#64748b" }}>
-          Your profile details have been pre-filled below. Adjust anything for this session.
-        </p>
-      </div>
-
-      <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-        <div>
-          <label style={labelStyle}>Brokerage Name *</label>
-          <input style={inputStyle} placeholder="e.g. Smith & Partners Insurance"
-            value={config.brokerName} onChange={(e) => setConfig((c) => ({ ...c, brokerName: e.target.value }))} />
-        </div>
-
-        <div>
-          <label style={labelStyle}>Your Logo</label>
-          <div onClick={() => fileInputRef.current?.click()} style={{
-            border: "2px dashed #cbd5e1", borderRadius: 10,
-            padding: "20px 16px", textAlign: "center",
-            cursor: "pointer", background: "#f8fafc",
-          }}>
-            {config.logoUrl ? (
-              <div>
-                <img src={config.logoUrl} alt="Logo" style={{ maxHeight: 50, maxWidth: 200, objectFit: "contain" }} />
-                <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 8 }}>Click to change</div>
-              </div>
-            ) : (
-              <div>
-                <div style={{ fontSize: 28, marginBottom: 4 }}>📤</div>
-                <div style={{ fontSize: 13, color: "#64748b" }}>Click to upload your logo</div>
-                <div style={{ fontSize: 11, color: "#94a3b8" }}>PNG, JPG, or SVG</div>
-              </div>
-            )}
-          </div>
-          <input ref={fileInputRef} type="file" accept="image/*" style={{ display: "none" }} onChange={handleLogoUpload} />
-        </div>
-
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-          <div>
-            <label style={labelStyle}>Phone Number</label>
-            <input style={inputStyle} placeholder="01234 567890"
-              value={config.phone} onChange={(e) => setConfig((c) => ({ ...c, phone: e.target.value }))} />
-          </div>
-          <div>
-            <label style={labelStyle}>Email Address</label>
-            <input style={inputStyle} placeholder="info@broker.co.uk"
-              value={config.email} onChange={(e) => setConfig((c) => ({ ...c, email: e.target.value }))} />
-          </div>
-        </div>
-
-        <div>
-          <label style={labelStyle}>FCA Reference Number</label>
-          <input style={inputStyle} placeholder="e.g. 123456"
-            value={config.fcaNumber} onChange={(e) => setConfig((c) => ({ ...c, fcaNumber: e.target.value }))} />
-        </div>
-
-        <div>
-          <label style={labelStyle}>Brand Colour</label>
-          <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-            <input type="color" value={config.brandColor}
-              onChange={(e) => setConfig((c) => ({ ...c, brandColor: e.target.value }))}
-              style={{ width: 52, height: 44, border: "2px solid #e2e8f0", borderRadius: 10, cursor: "pointer", padding: 2 }} />
-            <input style={{ ...inputStyle, flex: 1 }} placeholder="#1a3a5c"
-              value={config.brandColor} onChange={(e) => setConfig((c) => ({ ...c, brandColor: e.target.value }))} />
-            <div style={{ display: "flex", gap: 4 }}>
-              {["#1a3a5c", "#14532d", "#7c2d12", "#581c87", "#991b1b", "#0c4a6e"].map((c) => (
-                <div key={c} onClick={() => setConfig((prev) => ({ ...prev, brandColor: c }))} style={{
-                  width: 26, height: 26, borderRadius: 6, background: c, cursor: "pointer",
-                  border: config.brandColor === c ? "3px solid #333" : "2px solid #e2e8f0",
-                }} />
-              ))}
-            </div>
-          </div>
-        </div>
-
-        <div>
-          <label style={labelStyle}>Custom Footer Message (optional)</label>
-          <input style={inputStyle} placeholder="e.g. Protecting families since 1998"
-            value={config.footerMessage} onChange={(e) => setConfig((c) => ({ ...c, footerMessage: e.target.value }))} />
-        </div>
-
-        {/* Pricing Toggle */}
-        <div>
-          <label style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer", userSelect: "none" }}
-            onClick={() => setConfig((c) => ({ ...c, showPricing: !c.showPricing }))}>
-            <div style={{
-              width: 20, height: 20, borderRadius: 5,
-              border: `2px solid ${config.showPricing ? config.brandColor : "#cbd5e1"}`,
-              background: config.showPricing ? config.brandColor : "#fff",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              flexShrink: 0,
-            }}>
-              {config.showPricing && <span style={{ color: "#fff", fontSize: 13, fontWeight: 700, lineHeight: 1 }}>✓</span>}
-            </div>
-            <div>
-              <span style={{ fontSize: 13, fontWeight: 700, color: "#475569" }}>Add Pricing to Flyers</span>
-              <span style={{ fontSize: 11, color: "#94a3b8", marginLeft: 8 }}>Optional — only filled products will show a price</span>
-            </div>
-          </label>
-
-          {config.showPricing && (
-            <div style={{
-              marginTop: 14, padding: "16px 18px", background: "#f8fafc",
-              borderRadius: 12, border: "1px solid #e2e8f0",
-              display: "flex", flexDirection: "column", gap: 8,
-              maxHeight: 320, overflowY: "auto",
-            }}>
-              {PRODUCTS.map((p) => (
-                <div key={p.id} style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                  <span style={{
-                    fontSize: 8, color: "#fff", background: p.categoryColor,
-                    borderRadius: 4, padding: "2px 6px", fontWeight: 700,
-                    textTransform: "uppercase", flexShrink: 0, width: 72, textAlign: "center",
-                  }}>{p.category}</span>
-                  <span style={{ flex: 1, fontSize: 12.5, fontWeight: 600, color: "#334155" }}>{p.title}</span>
-                  <div style={{ position: "relative", flexShrink: 0, width: 100 }}>
-                    <span style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: "#94a3b8", fontSize: 13, fontWeight: 600 }}>£</span>
-                    <input style={{ ...inputStyle, padding: "8px 10px 8px 24px", fontSize: 13, width: 100, textAlign: "right" }}
-                      type="text" placeholder="—" value={config.prices[p.id] || ""}
-                      onChange={(e) => setConfig((c) => ({ ...c, prices: { ...c.prices, [p.id]: e.target.value } }))} />
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        <button onClick={onGenerate} disabled={!config.brokerName} style={{
-          width: "100%", padding: "16px 24px",
-          background: config.brokerName ? `linear-gradient(135deg, ${config.brandColor} 0%, ${adjustColor(config.brandColor, 30)} 100%)` : "#cbd5e1",
-          color: "#fff", border: "none", borderRadius: 12, fontSize: 16, fontWeight: 700,
-          cursor: config.brokerName ? "pointer" : "not-allowed",
-        }}>
-          Generate Product Sheets →
-        </button>
-      </div>
-    </div>
-  );
-}
-
 // ═══════════════════════════════════════════════
 // PAGE: PRODUCT SHEET GENERATOR
 // ═══════════════════════════════════════════════
@@ -1134,9 +959,9 @@ function ProductSheetGenerator() {
     showPricing: false,
     prices: {},
   });
-  const [view, setView] = useState("setup");
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [selectedProducts, setSelectedProducts] = useState(new Set(PRODUCTS.map((p) => p.id)));
+  const [showSettings, setShowSettings] = useState(false);
   const printRef = useRef(null);
 
   const filteredProducts = PRODUCTS.filter(
@@ -1169,79 +994,208 @@ function ProductSheetGenerator() {
     setTimeout(() => printWindow.print(), 500);
   }, [config.brokerName]);
 
-  if (view === "setup") {
-    return (
-      <div style={{ minHeight: "100vh", background: "#f1f5f9", fontFamily: FONT }}>
-        <TopNav title="Product Sheet Generator" />
-        <div style={{ padding: "36px 20px" }}>
-          <div style={{ textAlign: "center", marginBottom: 24 }}>
-            <img src={ALPS_LOGO} alt="Alps" style={{ height: 40, objectFit: "contain", marginBottom: 8 }} />
-            <p style={{ fontSize: 13, color: "#94a3b8" }}>
-              Insurance Product Sheets — Customised to Your Brand
-            </p>
-          </div>
-          <PSGConfigPanel config={config} setConfig={setConfig} onGenerate={() => setView("preview")} />
-          <div style={{ textAlign: "center", marginTop: 24 }}>
-            <p style={{ fontSize: 11, color: "#94a3b8" }}>Powered by Alps — The Leading Add-On Providers</p>
-            <p style={{ fontSize: 10, color: "#b0b8c4", marginTop: 6 }}>
-              If you experience any problems, or require any assistance, please get in touch with marketing at{" "}
-              <a href="mailto:tom.thomas@alpsltd.co.uk" style={{ color: "#64748b" }}>tom.thomas@alpsltd.co.uk</a>
-            </p>
-            <p style={{ fontSize: 9, color: "#cbd5e1", marginTop: 4 }}>v2.0</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const hasProfile = config.brokerName;
+
+  const inputStyle = {
+    width: "100%", padding: "10px 14px",
+    border: "2px solid #e2e8f0", borderRadius: 8,
+    fontSize: 13, fontFamily: "inherit", outline: "none",
+    background: "#fff", boxSizing: "border-box",
+  };
 
   return (
     <div style={{ minHeight: "100vh", background: "#f1f5f9", fontFamily: FONT }}>
-      {/* Top Bar */}
-      <div style={{
-        background: "#fff", borderBottom: "1px solid #e2e8f0",
-        padding: "14px 24px", display: "flex", justifyContent: "space-between",
-        alignItems: "center", position: "sticky", top: 0, zIndex: 100, flexWrap: "wrap", gap: 12,
-      }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-          <button onClick={() => setView("setup")} style={{
-            padding: "8px 16px", borderRadius: 8, border: "1px solid #e2e8f0",
-            background: "#fff", fontSize: 13, cursor: "pointer", fontWeight: 600, color: "#475569",
-          }}>← Edit Details</button>
-          <div>
-            <span style={{ fontWeight: 700, fontSize: 15, color: "#1e293b" }}>{config.brokerName}</span>
-            <span style={{ fontSize: 12, color: "#94a3b8", marginLeft: 8 }}>
-              {filteredProducts.length} product{filteredProducts.length !== 1 ? "s" : ""}
-            </span>
-          </div>
-        </div>
-        <button onClick={handlePrint} style={{
-          padding: "10px 20px", borderRadius: 8, border: "none",
-          background: `linear-gradient(135deg, ${config.brandColor} 0%, ${adjustColor(config.brandColor, 30)} 100%)`,
-          color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer",
-        }}>🖨️ Print / Save as PDF</button>
-      </div>
+      <TopNav title="Product Sheet Generator" />
 
-      <div style={{ padding: "28px 20px" }}>
-        {/* Export Instructions */}
+      <div style={{ maxWidth: 900, margin: "0 auto", padding: "36px 20px 60px" }}>
+        {/* Header */}
+        <div style={{ textAlign: "center", marginBottom: 32 }}>
+          <h2 style={{ margin: "0 0 6px", fontSize: 24, fontWeight: 800, color: "#1e293b" }}>
+            Product Sheet Generator
+          </h2>
+          <p style={{ margin: 0, fontSize: 14, color: "#64748b" }}>
+            Select products below to preview and export branded marketing sheets.
+          </p>
+        </div>
+
+        {/* No profile warning */}
+        {!profile && !config.brokerName && (
+          <div style={{
+            background: "#fff", border: "2px solid #F5A623", borderRadius: 12,
+            padding: "24px", textAlign: "center", marginBottom: 28,
+          }}>
+            <div style={{ fontSize: 28, marginBottom: 8 }}>👤</div>
+            <h3 style={{ margin: "0 0 8px", fontSize: 16, fontWeight: 700, color: "#1e293b" }}>
+              Set Up Your Broker Profile First
+            </h3>
+            <p style={{ margin: "0 0 16px", fontSize: 13, color: "#64748b" }}>
+              Your branding details are needed to generate product sheets.
+            </p>
+            <Link to="/broker-profile" style={{
+              display: "inline-block", padding: "10px 24px", borderRadius: 10,
+              background: "linear-gradient(135deg, #E91E8B 0%, #F5A623 100%)",
+              color: "#fff", fontSize: 14, fontWeight: 700, textDecoration: "none",
+            }}>Complete Your Profile →</Link>
+          </div>
+        )}
+
+        {/* Settings Panel (collapsible) */}
         <div style={{
-          maxWidth: 900, margin: "0 auto 24px", background: "#fff",
-          border: "1px solid #e2e8f0", borderRadius: 12, padding: "18px 24px",
-          display: "flex", alignItems: "flex-start", gap: 14,
+          background: "#fff", borderRadius: 14, border: "1px solid #e2e8f0",
+          marginBottom: 28, overflow: "hidden",
+          boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
         }}>
-          <span style={{ fontSize: 22, flexShrink: 0, marginTop: 1 }}>📄</span>
-          <div>
-            <div style={{ fontSize: 14, fontWeight: 700, color: "#1e293b", marginBottom: 6 }}>How to Export Your Sheets</div>
-            <div style={{ fontSize: 12.5, color: "#475569", lineHeight: 1.7 }}>
+          <div onClick={() => setShowSettings(!showSettings)} style={{
+            padding: "16px 24px", cursor: "pointer",
+            display: "flex", justifyContent: "space-between", alignItems: "center",
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <span style={{ fontSize: 18 }}>⚙️</span>
+              <div>
+                <span style={{ fontSize: 14, fontWeight: 700, color: "#1e293b" }}>Branding Settings</span>
+                {config.brokerName && (
+                  <span style={{ fontSize: 12, color: "#94a3b8", marginLeft: 10 }}>
+                    {config.brokerName}{config.showPricing ? " · Pricing on" : ""}
+                  </span>
+                )}
+              </div>
+            </div>
+            <span style={{ fontSize: 12, color: "#94a3b8", transition: "transform 0.2s", transform: showSettings ? "rotate(180deg)" : "none" }}>▼</span>
+          </div>
+
+          {showSettings && (
+            <div style={{ padding: "0 24px 24px", borderTop: "1px solid #f1f5f9" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 14, marginTop: 16 }}>
+                <div>
+                  <label style={{ fontSize: 10, fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 4, display: "block" }}>Brokerage Name *</label>
+                  <input style={inputStyle} placeholder="e.g. Smith & Partners" value={config.brokerName}
+                    onChange={(e) => setConfig((c) => ({ ...c, brokerName: e.target.value }))} />
+                </div>
+                <div>
+                  <label style={{ fontSize: 10, fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 4, display: "block" }}>Phone</label>
+                  <input style={inputStyle} placeholder="01234 567890" value={config.phone}
+                    onChange={(e) => setConfig((c) => ({ ...c, phone: e.target.value }))} />
+                </div>
+                <div>
+                  <label style={{ fontSize: 10, fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 4, display: "block" }}>Email</label>
+                  <input style={inputStyle} placeholder="info@broker.co.uk" value={config.email}
+                    onChange={(e) => setConfig((c) => ({ ...c, email: e.target.value }))} />
+                </div>
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 14, marginTop: 14 }}>
+                <div>
+                  <label style={{ fontSize: 10, fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 4, display: "block" }}>FCA Number</label>
+                  <input style={inputStyle} placeholder="e.g. 123456" value={config.fcaNumber}
+                    onChange={(e) => setConfig((c) => ({ ...c, fcaNumber: e.target.value }))} />
+                </div>
+                <div>
+                  <label style={{ fontSize: 10, fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 4, display: "block" }}>Brand Colour</label>
+                  <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                    <input type="color" value={config.brandColor}
+                      onChange={(e) => setConfig((c) => ({ ...c, brandColor: e.target.value }))}
+                      style={{ width: 40, height: 36, border: "2px solid #e2e8f0", borderRadius: 6, cursor: "pointer", padding: 2 }} />
+                    <input style={{ ...inputStyle, flex: 1 }} value={config.brandColor}
+                      onChange={(e) => setConfig((c) => ({ ...c, brandColor: e.target.value }))} />
+                  </div>
+                </div>
+                <div>
+                  <label style={{ fontSize: 10, fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 4, display: "block" }}>Footer Message</label>
+                  <input style={inputStyle} placeholder="e.g. Protecting families since 1998" value={config.footerMessage}
+                    onChange={(e) => setConfig((c) => ({ ...c, footerMessage: e.target.value }))} />
+                </div>
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginTop: 14 }}>
+                <div>
+                  <label style={{ fontSize: 10, fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 4, display: "block" }}>Logo</label>
+                  <div style={{ position: "relative" }}>
+                    <input type="file" accept="image/*" style={{ fontSize: 12, color: "#64748b" }}
+                      onChange={(e) => {
+                        const file = e.target.files[0];
+                        if (file) {
+                          const reader = new FileReader();
+                          reader.onload = (ev) => setConfig((c) => ({ ...c, logoUrl: ev.target.result }));
+                          reader.readAsDataURL(file);
+                        }
+                      }} />
+                    {config.logoUrl && <img src={config.logoUrl} alt="" style={{ maxHeight: 28, objectFit: "contain", marginTop: 6, display: "block" }} />}
+                  </div>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", userSelect: "none" }}
+                    onClick={() => setConfig((c) => ({ ...c, showPricing: !c.showPricing }))}>
+                    <div style={{
+                      width: 18, height: 18, borderRadius: 4,
+                      border: `2px solid ${config.showPricing ? config.brandColor : "#cbd5e1"}`,
+                      background: config.showPricing ? config.brandColor : "#fff",
+                      display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+                    }}>
+                      {config.showPricing && <span style={{ color: "#fff", fontSize: 11, fontWeight: 700 }}>✓</span>}
+                    </div>
+                    <span style={{ fontSize: 12, fontWeight: 600, color: "#475569" }}>Add Pricing to Flyers</span>
+                  </label>
+                </div>
+              </div>
+
+              {config.showPricing && (
+                <div style={{
+                  marginTop: 14, padding: "14px 16px", background: "#f8fafc",
+                  borderRadius: 10, border: "1px solid #e2e8f0",
+                  display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6,
+                  maxHeight: 240, overflowY: "auto",
+                }}>
+                  {PRODUCTS.map((p) => (
+                    <div key={p.id} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <span style={{
+                        fontSize: 7, color: "#fff", background: p.categoryColor,
+                        borderRadius: 3, padding: "1px 5px", fontWeight: 700,
+                        textTransform: "uppercase", flexShrink: 0, width: 60, textAlign: "center",
+                      }}>{p.category}</span>
+                      <span style={{ flex: 1, fontSize: 11, fontWeight: 600, color: "#334155", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{p.title}</span>
+                      <div style={{ position: "relative", flexShrink: 0, width: 80 }}>
+                        <span style={{ position: "absolute", left: 8, top: "50%", transform: "translateY(-50%)", color: "#94a3b8", fontSize: 11, fontWeight: 600 }}>£</span>
+                        <input style={{ ...inputStyle, padding: "6px 8px 6px 20px", fontSize: 11, width: 80, textAlign: "right" }}
+                          type="text" placeholder="—" value={config.prices[p.id] || ""}
+                          onChange={(e) => setConfig((c) => ({ ...c, prices: { ...c.prices, [p.id]: e.target.value } }))} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Export button + instructions */}
+        {hasProfile && (
+          <div style={{ display: "flex", gap: 12, justifyContent: "center", marginBottom: 24 }}>
+            <button onClick={handlePrint} style={{
+              padding: "12px 28px", borderRadius: 10, border: "none",
+              background: `linear-gradient(135deg, ${config.brandColor} 0%, ${adjustColor(config.brandColor, 30)} 100%)`,
+              color: "#fff", fontSize: 14, fontWeight: 700, cursor: "pointer",
+            }}>🖨️ Print / Save as PDF</button>
+          </div>
+        )}
+
+        {hasProfile && (
+          <div style={{
+            maxWidth: 650, margin: "0 auto 28px", background: "#fff",
+            border: "1px solid #e2e8f0", borderRadius: 12, padding: "14px 20px",
+            display: "flex", alignItems: "flex-start", gap: 12,
+          }}>
+            <span style={{ fontSize: 18, flexShrink: 0 }}>📄</span>
+            <div style={{ fontSize: 11.5, color: "#475569", lineHeight: 1.7 }}>
               <strong>1.</strong> Click <strong>'Print / Save as PDF'</strong> above.{" "}
-              <strong>2.</strong> When the popup comes, change the <strong>'Destination'</strong> to <strong>'Save as PDF'</strong>.{" "}
-              <strong>3.</strong> Make sure both <strong>'Headers and Footers'</strong> and <strong>'Background Graphics'</strong> are selected.{" "}
-              <strong>4.</strong> Hit <strong>'Save'</strong> and that's it! Enjoy your free print-ready marketing flyers. 🎉
+              <strong>2.</strong> Change <strong>'Destination'</strong> to <strong>'Save as PDF'</strong>.{" "}
+              <strong>3.</strong> Ensure both <strong>'Headers and Footers'</strong> and <strong>'Background Graphics'</strong> are selected.{" "}
+              <strong>4.</strong> Hit <strong>'Save'</strong> and that's it! 🎉
             </div>
           </div>
-        </div>
+        )}
 
+        {/* Category Filter */}
         <CategoryFilter selectedCategory={selectedCategory} setSelectedCategory={setSelectedCategory} />
 
+        {/* Product Toggles */}
         <div style={{
           display: "flex", flexWrap: "wrap", gap: 6, justifyContent: "center",
           marginBottom: 32, maxWidth: 900, margin: "0 auto 32px",
@@ -1259,6 +1213,7 @@ function ProductSheetGenerator() {
           ))}
         </div>
 
+        {/* Product Sheets */}
         <div ref={printRef}>
           {filteredProducts.map((product) => (
             <ProductSheet key={product.id} product={product} config={config} />
@@ -1287,36 +1242,53 @@ function ClaimsCardPreview({ product, profile, format }) {
   if (isBusinessCard) {
     return (
       <div style={{
-        width: 425, height: 275, background: "#fff", borderRadius: 8,
+        width: 425, minHeight: 275, background: "#fff", borderRadius: 8,
         overflow: "hidden", fontFamily: FONT, boxShadow: "0 4px 20px rgba(0,0,0,0.1)",
         display: "flex", flexDirection: "column",
       }}>
         <div style={{
           background: `linear-gradient(135deg, ${brandColor} 0%, ${adjustColor(brandColor, 30)} 100%)`,
-          padding: "12px 16px", display: "flex", justifyContent: "space-between", alignItems: "center",
+          padding: "10px 16px", display: "flex", justifyContent: "space-between", alignItems: "center",
         }}>
           {profile.logoUrl && (
             <div style={{ background: "#fff", borderRadius: 6, padding: "4px 8px", display: "inline-flex" }}>
-              <img src={profile.logoUrl} alt="" style={{ maxHeight: 20, objectFit: "contain" }} />
+              <img src={profile.logoUrl} alt="" style={{ maxHeight: 18, objectFit: "contain" }} />
             </div>
           )}
           <span style={{ fontSize: 9, color: "rgba(255,255,255,0.8)", fontWeight: 600 }}>{product.title}</span>
         </div>
-        <div style={{ flex: 1, padding: "10px 16px 8px", display: "flex", flexDirection: "column" }}>
-          <h3 style={{ margin: "0 0 6px", fontSize: 13, fontWeight: 800, color: "#1e293b" }}>{product.headline}</h3>
-          <div style={{
-            background: `${product.color}10`, borderRadius: 8, padding: "8px 12px",
-            marginBottom: 8, textAlign: "center",
-          }}>
-            <div style={{ fontSize: 8, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: 0.5 }}>Claims Line</div>
-            <div style={{ fontSize: 18, fontWeight: 800, color: product.color, letterSpacing: 0.5 }}>{product.claimsPhone}</div>
+        <div style={{ flex: 1, padding: "8px 16px 6px", display: "flex", flexDirection: "column" }}>
+          <div style={{ display: "flex", gap: 12, marginBottom: 6 }}>
+            <div style={{ flex: 1 }}>
+              <h3 style={{ margin: "0 0 5px", fontSize: 12, fontWeight: 800, color: "#1e293b" }}>{product.headline}</h3>
+              <div style={{
+                background: `${product.color}10`, borderRadius: 6, padding: "5px 10px", textAlign: "center",
+              }}>
+                <div style={{ fontSize: 7, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: 0.5 }}>Claims Line</div>
+                <div style={{ fontSize: 15, fontWeight: 800, color: product.color, letterSpacing: 0.5 }}>{product.claimsPhone}</div>
+              </div>
+            </div>
           </div>
+          <div style={{ marginBottom: 6 }}>
+            <div style={{ fontSize: 8, fontWeight: 700, color: "#64748b", marginBottom: 3 }}>What to do:</div>
+            {product.steps.map((step, i) => (
+              <div key={i} style={{ display: "flex", gap: 5, alignItems: "flex-start", marginBottom: 2 }}>
+                <span style={{ fontSize: 7, fontWeight: 800, color: product.color, flexShrink: 0, minWidth: 10 }}>{i + 1}.</span>
+                <span style={{ fontSize: 7, color: "#475569", lineHeight: 1.4 }}>{step}</span>
+              </div>
+            ))}
+          </div>
+          {product.footerNote && (
+            <div style={{ fontSize: 6.5, color: "#94a3b8", fontStyle: "italic", marginBottom: 4, lineHeight: 1.4 }}>
+              💡 {product.footerNote}
+            </div>
+          )}
           <div style={{ marginTop: "auto", display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
-            <div style={{ fontSize: 8, color: "#94a3b8", lineHeight: 1.5 }}>
+            <div style={{ fontSize: 7, color: "#94a3b8", lineHeight: 1.5 }}>
               {profile.phone && <div>📞 {profile.phone}</div>}
               {profile.email && <div>✉️ {profile.email}</div>}
             </div>
-            <span style={{ fontSize: 7, color: "#cbd5e1" }}>Powered by Alps</span>
+            <span style={{ fontSize: 6, color: "#cbd5e1" }}>Powered by Alps</span>
           </div>
         </div>
       </div>
@@ -1380,7 +1352,13 @@ function ClaimsCardPreview({ product, profile, format }) {
             borderRadius: 8, border: "1px solid #e2e8f0",
             fontSize: 12, color: "#64748b", lineHeight: 1.5, fontStyle: "italic",
           }}>
-            💡 {product.footerNote}
+            💡 {product.footerNote.includes("valid8.alpsltd.co.uk") ? (
+              <>
+                {product.footerNote.split("valid8.alpsltd.co.uk")[0]}
+                <a href="https://valid8.alpsltd.co.uk" target="_blank" rel="noopener noreferrer" style={{ color: "#0891B2", fontWeight: 600 }}>valid8.alpsltd.co.uk</a>
+                {product.footerNote.split("valid8.alpsltd.co.uk")[1]}
+              </>
+            ) : product.footerNote}
           </div>
         )}
       </div>
@@ -1422,10 +1400,16 @@ function ClaimsGuidanceCard() {
     const pageSize = isBC ? "85mm 55mm" : "148mm 210mm";
 
     const stepsHTML = product.steps.map((step, i) => {
-      if (isBC) return "";
       return `<div style="display:flex;gap:12px;align-items:flex-start;margin-bottom:14px;">
         <div style="width:28px;height:28px;border-radius:8px;flex-shrink:0;background:${product.color}22;color:${product.color};display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;">${i+1}</div>
         <p style="margin:0;font-size:13.5px;color:#334155;line-height:1.6;padding-top:3px;">${step}</p>
+      </div>`;
+    }).join("");
+
+    const stepsHTMLCompact = product.steps.map((step, i) => {
+      return `<div style="display:flex;gap:4px;align-items:flex-start;margin-bottom:1px;">
+        <span style="font-size:6px;font-weight:800;color:${product.color};flex-shrink:0;min-width:8px;">${i+1}.</span>
+        <span style="font-size:6px;color:#475569;line-height:1.4;">${step}</span>
       </div>`;
     }).join("");
 
@@ -1433,22 +1417,31 @@ function ClaimsGuidanceCard() {
     if (isBC) {
       bodyContent = `
         <div style="width:85mm;height:55mm;background:#fff;font-family:'Segoe UI',system-ui,sans-serif;display:flex;flex-direction:column;overflow:hidden;">
-          <div style="background:linear-gradient(135deg,${brandColor} 0%,${brandColor}cc 100%);padding:8px 12px;display:flex;justify-content:space-between;align-items:center;">
-            ${profile.logoUrl ? `<div style="background:#fff;border-radius:4px;padding:3px 6px;display:inline-flex;"><img src="${profile.logoUrl}" style="max-height:16px;object-fit:contain;" /></div>` : ""}
-            <span style="font-size:7px;color:rgba(255,255,255,0.8);font-weight:600;">${product.title}</span>
+          <div style="background:linear-gradient(135deg,${brandColor} 0%,${brandColor}cc 100%);padding:6px 10px;display:flex;justify-content:space-between;align-items:center;">
+            ${profile.logoUrl ? `<div style="background:#fff;border-radius:3px;padding:2px 5px;display:inline-flex;"><img src="${profile.logoUrl}" style="max-height:12px;object-fit:contain;" /></div>` : ""}
+            <span style="font-size:6px;color:rgba(255,255,255,0.8);font-weight:600;">${product.title}</span>
           </div>
-          <div style="flex:1;padding:8px 12px 6px;display:flex;flex-direction:column;">
-            <h3 style="margin:0 0 4px;font-size:11px;font-weight:800;color:#1e293b;">${product.headline}</h3>
-            <div style="background:${product.color}10;border-radius:6px;padding:6px 10px;text-align:center;margin-bottom:6px;">
-              <div style="font-size:7px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px;">Claims Line</div>
-              <div style="font-size:16px;font-weight:800;color:${product.color};letter-spacing:0.5px;">${product.claimsPhone}</div>
+          <div style="flex:1;padding:5px 10px 4px;display:flex;flex-direction:column;">
+            <div style="display:flex;gap:8px;margin-bottom:4px;">
+              <div style="flex:1;">
+                <h3 style="margin:0 0 3px;font-size:9px;font-weight:800;color:#1e293b;">${product.headline}</h3>
+                <div style="background:${product.color}10;border-radius:4px;padding:3px 8px;text-align:center;">
+                  <div style="font-size:5px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px;">Claims Line</div>
+                  <div style="font-size:12px;font-weight:800;color:${product.color};letter-spacing:0.5px;">${product.claimsPhone}</div>
+                </div>
+              </div>
             </div>
+            <div style="margin-bottom:3px;">
+              <div style="font-size:6px;font-weight:700;color:#64748b;margin-bottom:2px;">What to do:</div>
+              ${stepsHTMLCompact}
+            </div>
+            ${product.footerNote ? `<div style="font-size:5px;color:#94a3b8;font-style:italic;margin-bottom:2px;line-height:1.3;">💡 ${product.footerNote}</div>` : ""}
             <div style="margin-top:auto;display:flex;justify-content:space-between;align-items:flex-end;">
-              <div style="font-size:7px;color:#94a3b8;line-height:1.5;">
+              <div style="font-size:5.5px;color:#94a3b8;line-height:1.4;">
                 ${profile.phone ? `<div>📞 ${profile.phone}</div>` : ""}
                 ${profile.email ? `<div>✉️ ${profile.email}</div>` : ""}
               </div>
-              <span style="font-size:6px;color:#cbd5e1;">Powered by Alps</span>
+              <span style="font-size:5px;color:#cbd5e1;">Powered by Alps</span>
             </div>
           </div>
         </div>
@@ -1471,7 +1464,7 @@ function ClaimsGuidanceCard() {
           <div style="flex:1;padding:20px 28px;">
             <h3 style="margin:0 0 14px;font-size:13px;font-weight:700;color:#1e293b;">What to do:</h3>
             ${stepsHTML}
-            ${product.footerNote ? `<div style="margin-top:18px;padding:10px 14px;background:#f8fafc;border-radius:8px;border:1px solid #e2e8f0;font-size:11px;color:#64748b;line-height:1.5;font-style:italic;">💡 ${product.footerNote}</div>` : ""}
+            ${product.footerNote ? `<div style="margin-top:18px;padding:10px 14px;background:#f8fafc;border-radius:8px;border:1px solid #e2e8f0;font-size:11px;color:#64748b;line-height:1.5;font-style:italic;">💡 ${product.footerNote.replace('valid8.alpsltd.co.uk', '<a href="https://valid8.alpsltd.co.uk" style="color:#0891B2;font-weight:600;">valid8.alpsltd.co.uk</a>')}</div>` : ""}
           </div>
           <div style="padding:14px 28px;border-top:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center;background:#fafbfc;">
             <div style="font-size:11px;color:#64748b;">
