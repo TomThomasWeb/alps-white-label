@@ -20,6 +20,33 @@ function trackEvent(action, category, label, value) {
 }
 
 // ═══════════════════════════════════════════════
+// LIVE COUNTER (Firebase)
+// ═══════════════════════════════════════════════
+const FIREBASE_URL = "https://whitelabel-c74aa-default-rtdb.europe-west1.firebasedatabase.app";
+
+async function incrementCounter() {
+  try {
+    const res = await fetch(`${FIREBASE_URL}/counter/total.json`);
+    const current = await res.json() || 0;
+    await fetch(`${FIREBASE_URL}/counter/total.json`, {
+      method: "PUT",
+      body: JSON.stringify(current + 1),
+    });
+  } catch {}
+}
+
+function useCounter() {
+  const [count, setCount] = useState(null);
+  useEffect(() => {
+    fetch(`${FIREBASE_URL}/counter/total.json`)
+      .then(r => r.json())
+      .then(val => setCount(val || 0))
+      .catch(() => setCount(null));
+  }, []);
+  return count;
+}
+
+// ═══════════════════════════════════════════════
 // BROKER PROFILE CONTEXT
 // ═══════════════════════════════════════════════
 const BrokerContext = createContext();
@@ -672,6 +699,7 @@ function HomePage() {
   const { profile } = useBrokerProfile();
   const completeness = profileCompleteness(profile);
   const pct = Math.round((completeness / PROFILE_FIELDS.length) * 100);
+  const count = useCounter();
 
   const tools = [
     { path: "/product-sheet-generator", title: "Product Sheet Generator", desc: "Create branded product PDFs for your clients", icon: "📄", color: "#E91E8B" },
@@ -685,6 +713,12 @@ function HomePage() {
         <img src={ALPS_LOGO} alt="Alps" style={{ height: 48, objectFit: "contain", marginBottom: 20 }} />
         <h1 style={{ fontSize: 36, fontWeight: 800, color: "#1e293b", margin: "0 0 8px", letterSpacing: -1 }}>Broker Toolkit</h1>
         <p style={{ fontSize: 16, color: "#64748b", margin: 0, maxWidth: 460, marginInline: "auto", lineHeight: 1.6 }}>Everything your team needs to support and win clients</p>
+        {count !== null && count > 0 && (
+          <div style={{ marginTop: 16, display: "inline-flex", alignItems: "center", gap: 8, padding: "8px 20px", borderRadius: 24, background: "#fff", border: "1px solid #e2e8f0", boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
+            <span style={{ fontSize: 14 }}>🚀</span>
+            <span style={{ fontSize: 14, color: "#64748b" }}><strong style={{ color: "#1e293b", fontSize: 16 }}>{count.toLocaleString()}</strong> broker tools used and counting</span>
+          </div>
+        )}
       </div>
 
       {/* Profile bar */}
@@ -910,6 +944,7 @@ function ProductSheetGenerator() {
     setTimeout(() => pw.print(), 500);
     show("Your sheets are ready — check the new tab! 🎉");
     trackEvent("sheets_generated", "product_sheets", config.brokerName, filteredProducts.length);
+    incrementCounter();
   }, [config.brokerName, show]);
 
   const hasProfile = config.brokerName;
@@ -1112,6 +1147,7 @@ function ClaimsGuidanceCard() {
     setTimeout(() => pw.print(), 500);
     show(`${isBC ? "Business card" : "A5 card"} ready — check the new tab! 🎉`);
     trackEvent("claims_card_exported", "claims_cards", `${product.title} - ${isBC ? "business_card" : "a5"}`);
+    incrementCounter();
   };
 
   const handleDownloadAll = (format) => {
@@ -1376,6 +1412,7 @@ function EmailTemplates() {
     URL.revokeObjectURL(url);
     show("Plain text file downloaded! 📄");
     trackEvent("email_downloaded", "email_templates", `${currentTemplate.title} - txt`);
+    incrementCounter();
   };
 
   const handleDownloadPdf = () => {
@@ -1412,6 +1449,7 @@ function EmailTemplates() {
     setTimeout(() => pw.print(), 500);
     show("PDF letter ready — check the new tab! 🎉");
     trackEvent("email_downloaded", "email_templates", `${currentTemplate.title} - pdf`);
+    incrementCounter();
   };
 
   const inputStyle = { width: "100%", padding: "10px 14px", border: "2px solid #e2e8f0", borderRadius: 8, fontSize: 13, fontFamily: "inherit", outline: "none", background: "#fff", boxSizing: "border-box" };
